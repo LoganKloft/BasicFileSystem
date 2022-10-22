@@ -55,8 +55,6 @@ int ls_file(MINODE *mip, char *name)
 
 int ls_dir(MINODE *mip)
 {
-  printf("ls_dir: list CWD's file names; YOU FINISH IT as ls -l\n");
-
   char buf[BLKSIZE], temp[256];
   DIR *dp;
   char *cp;
@@ -77,14 +75,12 @@ int ls_dir(MINODE *mip)
     cp += dp->rec_len;
     dp = (DIR *)cp;
   }
-  printf("\n");
 }
 
 int ls(char* pathname)
 {
-  return ls_dir(running->cwd);
   // Use CWD
-  if (!pathname) return ls_dir(running->cwd);
+  if (!pathname || !strlen(pathname)) return ls_dir(running->cwd);
 
   // Use Path
   int ino = getino(pathname);
@@ -105,10 +101,10 @@ int ls(char* pathname)
   }
 
   // directory
-  if ((mip->INODE.i_mode & 0xF000) == 0x4000) ls_dir(mip);
+  if ((mip->INODE.i_mode & 0xF000) == 0x4000) return ls_dir(mip);
 
   // file
-  // ls_file(mip, )
+  ls_file(mip, basename(pathname));
 }
 
 char *pwd(MINODE *wd)
