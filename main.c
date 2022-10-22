@@ -38,6 +38,15 @@ int init()
 
   printf("init()\n");
 
+  // (1)
+  for (i=0; i<NPROC; i++){
+    p = &proc[i];
+    p->pid = i+1;           // pid = 1, 2, ..., NPROC
+    p->uid = p->gid = 0;    // uid = gid = 0: SUPER user
+    p->cwd = 0;             // CWD of process
+  }
+
+  // (2)
   for (i=0; i<NMINODE; i++){
     mip = &minode[i];
     mip->dev = mip->ino = 0;
@@ -45,25 +54,18 @@ int init()
     mip->mounted = 0;
     mip->mptr = 0;
   }
-  for (i=0; i<NPROC; i++){
-    p = &proc[i];
-    p->pid = i+1;           // pid = 1, 2
-    p->uid = p->gid = 0;    // uid = 0: SUPER user
-    p->cwd = 0;             // CWD of process
-  }
+
+  // (3)
+  root = 0;
 }
+
+char *disk = "mydisk";     // change this to YOUR virtual
 
 // load root INODE and set root pointer to it
 int mount_root()
 {  
   printf("mount_root()\n");
-  root = iget(dev, 2);
-}
 
-char *disk = "mydisk";     // change this to YOUR virtual
-
-int main(int argc, char *argv[ ])
-{
   int ino;
   char buf[BLKSIZE];
 
@@ -96,14 +98,20 @@ int main(int argc, char *argv[ ])
   iblk = gp->bg_inode_table;
   printf("bmp=%d imap=%d inode_start = %d\n", bmap, imap, iblk);
 
-  init();  
-  mount_root();
+  root = iget(dev, 2);
+
   printf("root refCount = %d\n", root->refCount);
 
   printf("creating P0 as running process\n");
   running = &proc[0];
   running->cwd = iget(dev, 2);
   printf("root refCount = %d\n", root->refCount);
+}
+
+int main(int argc, char *argv[ ])
+{
+  init();  
+  mount_root();
 
   // WRTIE code here to create P1 as a USER process
   
