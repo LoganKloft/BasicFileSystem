@@ -1,9 +1,29 @@
 /************* cd_ls_pwd.c file **************/
-int cd()
+int cd(char* pathname)
 {
-  printf("cd: under construction READ textbook!!!!\n");
+  // (1)
+  int ino = getino(pathname);
+  if (!ino)
+  {
+    printf("cd> pathname: %s does not exist\n", pathname);
+    return -1;
+  }
 
-  // READ Chapter 11.7.3 HOW TO chdir
+  // (2)
+  MINODE *mip = iget(dev, ino);
+
+  // (3)
+  if ((mip->INODE.i_mode & 0xF000) != 0x4000)
+  {
+    printf("cd> pathname: %s not a directory\n", pathname);
+    return -1;
+  }
+
+  // (4)
+  iput(running->cwd);
+
+  // (5)
+  running->cwd = mip;
 }
 
 char *t1 = "xwrxwrxwr-------";
@@ -107,14 +127,31 @@ int ls(char* pathname)
   ls_file(mip, basename(pathname));
 }
 
-char *pwd(MINODE *wd)
+char* rpwd(MINODE *wd)
 {
-  printf("pwd: READ HOW TO pwd in textbook!!!!\n");
-  if (wd == root){
-    printf("/\n");
-    return;
-  }
+  char my_name[256];
+  // (1)
+  if (wd == root) return;
+
+  // (2)
+  u32 my_ino;
+  u32 parent_ino = findino(wd, &my_ino);
+
+  // (3)
+  MINODE *pip = iget(dev, parent_ino);
+
+  // (4)
+  findmyname(pip, my_ino, my_name);
+
+  // (5)
+  rpwd(pip);
+
+  // (6)
+  printf("/%s", my_name);
 }
 
-
-
+char* pwd(MINODE *wd)
+{
+  if (wd == root) printf("/");
+  else rpwd(wd); putchar('\n');
+}

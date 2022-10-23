@@ -218,6 +218,23 @@ int findmyname(MINODE *parent, u32 myino, char myname[ ])
    get_block(dev, ip->i_block[0], sbuf);
    dp = (DIR *)sbuf;
    cp = sbuf;
+
+   while (cp < sbuf + BLKSIZE){
+     strncpy(temp, dp->name, dp->name_len); // dp->name is NOT a string
+     temp[dp->name_len] = 0;                // temp is a STRING
+     printf("%4d  %4d  %4d    %s\n", 
+	    dp->inode, dp->rec_len, dp->name_len, temp); // print temp !!!
+
+     if (dp->inode == myino){            // compare dp->inode with myino !!
+        printf("found %d : name = %s\n", dp->inode, temp);
+        strcpy(myname, temp);
+        return dp->inode;
+     }
+
+     cp += dp->rec_len;
+     dp = (DIR *)cp;
+   }
+   return 0;
 }
 
 int findino(MINODE *mip, u32 *myino) // myino = i# of . return i# of ..
@@ -225,4 +242,36 @@ int findino(MINODE *mip, u32 *myino) // myino = i# of . return i# of ..
   // mip points at a DIR minode
   // WRITE your code here: myino = ino of .  return ino of ..
   // all in i_block[0] of this DIR INODE.
+  char *cp, c, sbuf[BLKSIZE], temp[256];
+   DIR *dp;
+   INODE *ip;
+
+   ip = &(mip->INODE);
+
+   /*** search for ino in mip's data blocks: ASSUME i_block[0] ONLY ***/
+
+   get_block(dev, ip->i_block[0], sbuf);
+   dp = (DIR *)sbuf;
+   cp = sbuf;
+
+   while (cp < sbuf + BLKSIZE){
+     strncpy(temp, dp->name, dp->name_len); // dp->name is NOT a string
+     temp[dp->name_len] = 0;                // temp is a STRING
+     printf("%4d  %4d  %4d    %s\n", 
+	    dp->inode, dp->rec_len, dp->name_len, temp); // print temp !!!
+
+     if (!strcmp(temp, ".")){            // compare dp->inode with myino !!
+         printf("found %s : ino = %d\n", temp, dp->inode);
+         *myino = dp->inode;
+     }
+
+     if (!strcmp(temp, "..")) {
+         printf("found %s : ino = %d\n", temp, dp->inode);
+         return dp->inode;
+     }
+
+     cp += dp->rec_len;
+     dp = (DIR *)cp;
+   }
+   return 0;
 }
