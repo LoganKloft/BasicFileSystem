@@ -59,15 +59,18 @@ int ls_file(MINODE *mip, char *name)
   printf("%s ",ftime);
 
   // print name
-  printf("%s", name); // print file name
+  printf("%7s", name); // print file name
 
-  // print -> linkname if symbolic file
-  // if ((inode->i_mode & 0xF000)== 0xA000){
-  //   // use readlink() to read linkname
-  //   char linkname[256];
-  //   readlink(name, linkname, 256);
-  //   printf(" -> %s", linkname); // print linked name
-  // }
+  if ((inode->i_mode & 0xF000)== 0xA000){
+    printf(" -> %s", mip->INODE.i_block);
+    
+  }
+
+  char buff[50];
+
+  sprintf(buff, "[%d %d]", dev, mip->ino);
+
+  printf("%7s", buff);
   printf("\n");
 
   return 1;
