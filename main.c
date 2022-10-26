@@ -108,7 +108,7 @@ int mount_root()
 
   // WRTIE code here to create P1 as a USER process
   printf("creating P1 as USER process\n");
-  proc[0].cwd = iget(dev, 2);
+  proc[1].cwd = iget(dev, 2);
 
   printf("root refCount = %d\n", root->refCount);
 }
