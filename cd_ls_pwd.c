@@ -2,7 +2,9 @@
 int cd(char* pathname)
 {
   // (1)
-  int ino = getino(pathname);
+  int ino = 0;
+  if (!pathname || !strlen(pathname)) ino = 2;
+  else ino = getino(pathname);
   if (!ino)
   {
     printf("cd> pathname: %s does not exist\n", pathname);

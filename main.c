@@ -1,5 +1,5 @@
 /****************************************************************************
-*                   KCW: mount root file system                             *
+*         Logan Kloft & Manjesh Puram: mount root file system             *
 *****************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -105,6 +105,11 @@ int mount_root()
   printf("creating P0 as running process\n");
   running = &proc[0];
   running->cwd = iget(dev, 2);
+
+  // WRTIE code here to create P1 as a USER process
+  printf("creating P1 as USER process\n");
+  proc[0].cwd = iget(dev, 2);
+
   printf("root refCount = %d\n", root->refCount);
 }
 
@@ -112,8 +117,6 @@ int main(int argc, char *argv[ ])
 {
   init();  
   mount_root();
-
-  // WRTIE code here to create P1 as a USER process
   
   while(1){
     printf("input command : [ls|cd|pwd|quit] ");
