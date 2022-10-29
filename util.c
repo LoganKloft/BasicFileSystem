@@ -2,30 +2,7 @@
 #ifndef UTIL
 #define UTIL
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <ext2fs/ext2_fs.h>
-#include <string.h>
-#include <libgen.h>
-#include <sys/stat.h>
-#include <time.h>
-
 #include "type.h"
-
-/**** globals defined in main.c file ****/
-// extern MINODE minode[NMINODE];
-// extern MINODE *root;
-// extern PROC   proc[NPROC], *running;
-
-// extern char gpath[128];
-// extern char *name[64];
-// extern int n;
-
-// extern int fd, dev;
-// extern int nblocks, ninodes, bmap, imap, iblk;
-
-// extern char line[128], cmd[32], pathname[128];
 
 int get_block(int dev, int blk, char *buf)
 {
@@ -133,14 +110,16 @@ void iput(MINODE *mip)  // iput(): release a minode
 
    //printf("iput: ino=%d block=%d offset=%d\n", ino, block, offset);
 
-   get_block(dev, block, buf);    // buf[ ] contains this INODE
+   get_block(mip->dev, block, buf);    // buf[ ] contains this INODE
    ip = (INODE *)buf + offset;  // this INODE in buf[ ]
 
    // copy mip->INODE to buf
    *ip = mip->INODE;
 
    // put INODE into disk
-   put_block(dev, block, buf);
+   put_block(mip->dev, block, buf);
+
+   mip->refCount = 0;
 } 
 
 int search(MINODE *mip, char *name)

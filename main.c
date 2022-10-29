@@ -16,20 +16,9 @@
 #include "util.c"
 #include "alloc.c"
 #include "cd_ls_pwd.c"
+#include "mkdir_creat.c"
 
-// extern MINODE *iget();
-
-// MINODE minode[NMINODE];
-// MINODE *root;
-// PROC   proc[NPROC], *running;
-
-// char gpath[128]; // global for tokenized components
-// char *name[64];  // assume at most 64 components in pathname
-// int   n;         // number of component strings
-
-// int  fd, dev;
-// int  nblocks, ninodes, bmap, imap, iblk;
-// char line[128], cmd[32], pathname[128];
+int quit();
 
 int init()
 {
@@ -59,8 +48,6 @@ int init()
   // (3)
   root = 0;
 }
-
-// char *disk = "mydisk";     // change this to YOUR virtual
 
 // load root INODE and set root pointer to it
 int mount_root()
@@ -120,7 +107,7 @@ int main(int argc, char *argv[ ])
   mount_root();
   
   while(1){
-    printf("input command : [ls|cd|pwd|quit] ");
+    printf("input command : [ls|cd|pwd|mkdir|creat|quit] ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = 0;
 
@@ -131,14 +118,12 @@ int main(int argc, char *argv[ ])
     sscanf(line, "%s %s", cmd, pathname);
     printf("cmd=%s pathname=%s\n", cmd, pathname);
   
-    if (strcmp(cmd, "ls")==0)
-       ls(pathname);
-    else if (strcmp(cmd, "cd")==0)
-       cd(pathname);
-    else if (strcmp(cmd, "pwd")==0)
-       pwd(running->cwd);
-    else if (strcmp(cmd, "quit")==0)
-       quit();
+    if (strcmp(cmd, "ls") == 0) ls(pathname);
+    else if (strcmp(cmd, "cd") == 0) cd(pathname);
+    else if (strcmp(cmd, "pwd") == 0) pwd(running->cwd);
+    else if (strcmp(cmd, "mkdir") == 0) my_mkdir(pathname);
+    else if (strcmp(cmd, "creat") == 0) my_creat(pathname);
+    else if (strcmp(cmd, "quit") == 0) quit();
   }
 }
 
@@ -148,7 +133,8 @@ int quit()
   MINODE *mip;
   for (i=0; i<NMINODE; i++){
     mip = &minode[i];
-    if (mip->refCount > 0)
+    if (mip->refCount && mip->dirty)
+      mip->refCount = 1;
       iput(mip);
   }
   printf("see you later, alligator\n");

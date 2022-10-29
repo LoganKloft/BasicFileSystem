@@ -2,6 +2,15 @@
 #ifndef TYPE
 #define TYPE
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <ext2fs/ext2_fs.h>
+#include <string.h>
+#include <libgen.h>
+#include <sys/stat.h>
+#include <time.h>
+
 typedef unsigned char  u8;
 typedef unsigned short u16;
 typedef unsigned int   u32;
