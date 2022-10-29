@@ -1,4 +1,7 @@
 /*********** util.c file ****************/
+#ifndef UTIL
+#define UTIL
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -11,18 +14,18 @@
 #include "type.h"
 
 /**** globals defined in main.c file ****/
-extern MINODE minode[NMINODE];
-extern MINODE *root;
-extern PROC   proc[NPROC], *running;
+// extern MINODE minode[NMINODE];
+// extern MINODE *root;
+// extern PROC   proc[NPROC], *running;
 
-extern char gpath[128];
-extern char *name[64];
-extern int n;
+// extern char gpath[128];
+// extern char *name[64];
+// extern int n;
 
-extern int fd, dev;
-extern int nblocks, ninodes, bmap, imap, iblk;
+// extern int fd, dev;
+// extern int nblocks, ninodes, bmap, imap, iblk;
 
-extern char line[128], cmd[32], pathname[128];
+// extern char line[128], cmd[32], pathname[128];
 
 int get_block(int dev, int blk, char *buf)
 {
@@ -290,3 +293,5 @@ int findino(MINODE *mip, u32 *myino) // myino = i# of . return i# of ..
    }
    return 0;
 }
+
+#endif

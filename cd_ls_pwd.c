@@ -1,4 +1,10 @@
 /************* cd_ls_pwd.c file **************/
+#ifndef CDLDPWD
+#define CDLWPWD
+
+#include "type.h"
+#include "util.c"
+
 int cd(char* pathname)
 {
   // (1)
@@ -160,3 +166,5 @@ char* pwd(MINODE *wd)
   if (wd == root) printf("/");
   else rpwd(wd); putchar('\n');
 }
+
+#endif

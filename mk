@@ -1,7 +1,8 @@
+cp mydisk mydiskcopy
 
 rm a.out 2> /dev/null
 
-gcc main.c util.c
+gcc main.c
 
 ./a.out
 

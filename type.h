@@ -1,4 +1,7 @@
 /*************** type.h file for LEVEL-1 ****************/
+#ifndef TYPE
+#define TYPE
+
 typedef unsigned char  u8;
 typedef unsigned short u16;
 typedef unsigned int   u32;
@@ -93,3 +96,19 @@ typedef struct proc{
   int          gid;
   MINODE      *cwd;      // CWD directory pointer  
 }PROC;
+
+MINODE minode[NMINODE];
+MINODE *root;
+PROC   proc[NPROC], *running;
+
+char gpath[128]; // global for tokenized components
+char *name[64];  // assume at most 64 components in pathname
+int   n;         // number of component strings
+
+int  fd, dev;
+int  nblocks, ninodes, bmap, imap, iblk;
+char line[128], cmd[32], pathname[128];
+
+char *disk = "mydiskcopy";     // change this to YOUR virtual
+
+#endif

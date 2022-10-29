@@ -13,22 +13,23 @@
 #include <time.h>
 
 #include "type.h"
-
-extern MINODE *iget();
-
-MINODE minode[NMINODE];
-MINODE *root;
-PROC   proc[NPROC], *running;
-
-char gpath[128]; // global for tokenized components
-char *name[64];  // assume at most 64 components in pathname
-int   n;         // number of component strings
-
-int  fd, dev;
-int  nblocks, ninodes, bmap, imap, iblk;
-char line[128], cmd[32], pathname[128];
-
+#include "util.c"
+#include "alloc.c"
 #include "cd_ls_pwd.c"
+
+// extern MINODE *iget();
+
+// MINODE minode[NMINODE];
+// MINODE *root;
+// PROC   proc[NPROC], *running;
+
+// char gpath[128]; // global for tokenized components
+// char *name[64];  // assume at most 64 components in pathname
+// int   n;         // number of component strings
+
+// int  fd, dev;
+// int  nblocks, ninodes, bmap, imap, iblk;
+// char line[128], cmd[32], pathname[128];
 
 int init()
 {
@@ -59,7 +60,7 @@ int init()
   root = 0;
 }
 
-char *disk = "mydisk";     // change this to YOUR virtual
+// char *disk = "mydisk";     // change this to YOUR virtual
 
 // load root INODE and set root pointer to it
 int mount_root()
