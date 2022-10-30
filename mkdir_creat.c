@@ -16,6 +16,9 @@ int enter_name(MINODE *pmip, int ino, char *name)
         {
             // allocate new block
             balloc(pmip->dev);
+            pmip->INODE.i_size += BLKSIZE;
+            pmip->INODE.i_blocks += 2;
+            pmip->dirty = 1;
         }
 
         // (1) get parent's data block into buf
@@ -57,21 +60,21 @@ int enter_name(MINODE *pmip, int ino, char *name)
 int kmkdir(MINODE *pmip, char *basename)
 {
     // (1) allocate INODE and disk block
-    int ino = ialloc(dev);
+    int ino = ialloc(pmip->dev);
     if (ino == 0)
     {
         printf("kmkdir> failed to allocate inode\n");
         return -1;
     }
 
-    int bno = balloc(dev);
+    int bno = balloc(pmip->dev);
     if (bno == -1)
     {
         printf("kmkdir> failed to allocate block\n");
     }
 
     // (2) load INODE into MINODE and initialize INODE
-    MINODE *mip = iget(dev, ino);
+    MINODE *mip = iget(pmip->dev, ino);
     INODE *ip = &mip->INODE;
     ip->i_mode = 0x41ED; // 040755: DIR type and permissions
     ip->i_uid = running->uid; // owner uid
@@ -100,7 +103,7 @@ int kmkdir(MINODE *pmip, char *basename)
     dp->rec_len = BLKSIZE-12; // rec_len spans block
     dp->name_len = 2;
     dp->name[0] = dp->name[1] = '.';
-    put_block(dev, bno, buf); // write to blk on diks
+    put_block(mip->dev, bno, buf); // write to blk on disk
 
     // (4) register (ino, basename) as DIR entry to parent INODE
     enter_name(pmip, ino, basename);
@@ -139,7 +142,7 @@ int my_mkdir(char *pathname)
         return -1;
     }
 
-    // (4) hit them with the kmkdir call
+    // (4)
     kmkdir(pmip, bname);
 
     // (5) increment pmip's link count, mark pmip as dirty
@@ -148,9 +151,73 @@ int my_mkdir(char *pathname)
     iput(pmip);
 }
 
+int kcreat(MINODE *pmip, char *basename)
+{
+    // (1) allocate INODE and disk block
+    int ino = ialloc(pmip->dev);
+    if (ino == 0)
+    {
+        printf("kcreat> failed to allocate inode\n");
+        return -1;
+    }
+
+    // (2) load INODE into MINODE and initialize INODE
+    MINODE *mip = iget(dev, ino);
+    INODE *ip = &mip->INODE;
+    ip->i_mode = 0x81A4; // regular file type and permissions
+    ip->i_uid = running->uid; // owner uid
+    ip->i_gid = running->gid; // group Id
+    ip->i_size = 0; // size in bytes
+    ip->i_links_count = 1; // links count=1
+    ip->i_atime = ip->i_ctime = ip->i_mtime = time(0L);
+    ip->i_blocks = 0; // LINUX: Blocks count in 512-byte chunks
+    for (int i = 0; i < 15; i++) ip->i_block[i] = 0; // ip->i_block[0] to ip->i_block[14] = 0;
+    mip->dirty = 1; // mark minode dirty
+    iput(mip); // write INODE to disk
+
+    // (3) register (ino, basename) as DIR entry to parent INODE
+    enter_name(pmip, ino, basename);
+}
+
 int my_creat(char *pathname)
 {
+    // (1) divide pathname into dirname and basename
+    char pbuf[128];
+    strcpy(pbuf, pathname);
+    char *dname = dirname(pathname);
+    char *bname = basename(pbuf);
 
+    printf("dirname: %s\n", dname);
+    printf("basename: %s\n", bname);
+
+    // (2) check that dirname exists and is a DIR
+    int pino = getino(dname);
+    if (pino == 0)
+    {
+        printf("creat> dirname: %s does not exist\n", dname);
+        return -1;
+    }
+
+    MINODE *pmip = iget(dev, pino);
+    if (!S_ISDIR(pmip->INODE.i_mode))
+    {
+        printf("creat> dirname: %s not a directory\n", dname);
+        return -1;
+    }
+
+    // (3) check that basename does not exist in dirname
+    if (search(pmip, bname))
+    {
+        printf("creat> basename: %s already exists in directory %s\n", bname, dname);
+        return -1;
+    }
+
+    // (4)
+    kcreat(pmip, bname);
+
+    // mark pmip as dirty
+    pmip->dirty = 1;
+    iput(pmip);
 }
 
 #endif
