@@ -71,7 +71,6 @@ int ls_file(MINODE *mip, char *name)
 
   if ((inode->i_mode & 0xF000)== 0xA000){
     printf(" -> %s", mip->INODE.i_block);
-    
   }
 
   char buff[50];
