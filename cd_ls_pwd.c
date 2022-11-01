@@ -101,6 +101,7 @@ int ls_dir(MINODE *mip)
     int ino = dp->inode;
     MINODE *mip = iget(dev, ino);
     ls_file(mip, temp);
+    iput(mip);
 
     cp += dp->rec_len;
     dp = (DIR *)cp;
@@ -131,10 +132,9 @@ int ls(char* pathname)
   }
 
   // directory
-  if ((mip->INODE.i_mode & 0xF000) == 0x4000) return ls_dir(mip);
-
-  // file
-  ls_file(mip, basename(pathname));
+  if ((mip->INODE.i_mode & 0xF000) == 0x4000) ls_dir(mip); // directory
+  else ls_file(mip, basename(pathname)); // file
+  iput(mip);
 }
 
 char* rpwd(MINODE *wd)

@@ -128,7 +128,7 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "pwd") == 0) pwd(running->cwd);
     else if (strcmp(cmd, "mkdir") == 0) my_mkdir(pathname);
     else if (strcmp(cmd, "creat") == 0) my_creat(pathname);
-    // else if (strcmp(cmd, "rmdir") == 0) my_rmdir(pathname);
+    else if (strcmp(cmd, "rmdir") == 0) my_rmdir(pathname);
     // else if (strcmp(cmd, "link") == 0) my_link(pathname);
     // else if (strcmp(cmd, "unlink") == 0) my_unlink(pathname);
     // else if (strcmp(cmd, "symlink") == 0) my_symlink(pathname);
