@@ -128,13 +128,18 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "pwd") == 0) pwd(running->cwd);
     else if (strcmp(cmd, "mkdir") == 0) my_mkdir(pathname);
     else if (strcmp(cmd, "creat") == 0) my_creat(pathname);
-    else if (strcmp(cmd, "rmdir") == 0) my_rmdir(pathname);
-    else if (strcmp(cmd, "link") == 0) my_link(pathname);
-    else if (strcmp(cmd, "unlink") == 0) my_unlink(pathname);
-    else if (strcmp(cmd, "symlink") == 0) my_symlink(pathname);
-    else if (strcmp(cmd, "readlink") == 0) my_readlink(pathname);
-    else if (strcmp(cmd, "stat") == 0) my_stat(pathname);
-    else if (strcmp(cmd, "chmod") == 0) my_chmod(pathname);
+    // else if (strcmp(cmd, "rmdir") == 0) my_rmdir(pathname);
+    // else if (strcmp(cmd, "link") == 0) my_link(pathname);
+    // else if (strcmp(cmd, "unlink") == 0) my_unlink(pathname);
+    // else if (strcmp(cmd, "symlink") == 0) my_symlink(pathname);
+    // else if (strcmp(cmd, "readlink") == 0) my_readlink(pathname);
+    // else if (strcmp(cmd, "stat") == 0) my_stat(pathname);
+    else if (strcmp(cmd, "chmod") == 0)
+    {
+      char permissions[32];
+      sscanf(line, "%s %s %s", cmd, permissions, pathname);
+      my_chmod(permissions, pathname);
+    }
     else if (strcmp(cmd, "utime") == 0) my_utime(pathname);
     else if (strcmp(cmd, "quit") == 0) quit();
   }
