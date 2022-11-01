@@ -1,5 +1,5 @@
-#ifndef ALLOC
-#define ALLOC
+#ifndef ALLOCDALLOC
+#define ALLOCDALLOC
 
 #include "type.h"
 #include "util.c"
@@ -16,6 +16,13 @@ int set_bit(char *buf, int bit)
     int i = bit / 8; // byte
     int j = bit % 8; // bit
     buf[i] |= (1 << j);
+}
+
+int clr_bit(char *buf, int bit)
+{
+    int i = bit / 8; // byte
+    int j = bit % 8; // bit
+    buf[i] &= ~(i << j);
 }
 
 int decFreeInodes(int dev)
@@ -47,6 +54,38 @@ int decFreeBlocks(int dev)
     get_block(dev, 2, buf);
     gp = (GD *)buf;
     gp->bg_free_blocks_count--;
+    put_block(dev, 2, buf);
+}
+
+int incFreeInodes(int dev)
+{
+    char buf[BLKSIZE];
+
+    // inc free inodes count in SUPER and GD
+    get_block(dev, 1, buf);
+    sp = (SUPER *)buf;
+    sp->s_free_inodes_count++;
+    put_block(dev, 1, buf);
+
+    get_block(dev, 2, buf);
+    gp = (GD *)buf;
+    gp->bg_free_inodes_count++;
+    put_block(dev, 2, buf);
+}
+
+int incFreeBlocks(int dev)
+{
+    char buf[BLKSIZE];
+
+    // inc free blocks count in SUPER and GD
+    get_block(dev, 1, buf);
+    sp = (SUPER *)buf;
+    sp->s_free_blocks_count++;
+    put_block(dev, 1, buf);
+
+    get_block(dev, 2, buf);
+    gp = (GD *)buf;
+    gp->bg_free_blocks_count++;
     put_block(dev, 2, buf);
 }
 
@@ -93,11 +132,53 @@ int balloc(int dev)
             decFreeBlocks(dev);
 
             printf("Allocated block= %d\n", i);
-            return i; // bits count from 0, block from 0 also
+            return i;
         }
     }
 
-    return -1; // failed to allocate inode
+    return 0; // failed to allocate block
+}
+
+int idalloc(int dev, int ino)
+{
+    int i;
+    char buf[BLKSIZE];
+
+    if (ino > ninodes){
+    printf("inumber %d out of range\n", ino);
+    return -1;
+    }
+
+    // get inode bitmap block
+    get_block(dev, imap, buf);
+    clr_bit(buf, ino-1);
+
+    // write buf back
+    put_block(dev, imap, buf);
+
+    // update free inode count in SUPER and GD
+    incFreeInodes(dev);
+}
+
+int bdalloc(int dev, int bno)
+{
+    int i;
+    char buf[BLKSIZE];
+
+    if (bno > nblocks){
+    printf("bno %d out of range\n", bno);
+    return -1;
+    }
+
+    // get bno bitmap block
+    get_block(dev, bmap, buf);
+    clr_bit(buf, bno);
+
+    // write buf back
+    put_block(dev, bmap, buf);
+
+    // update free block count in SUPER and GD
+    incFreeBlocks(dev);
 }
 
 #endif

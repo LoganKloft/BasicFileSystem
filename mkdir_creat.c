@@ -3,7 +3,7 @@
 
 #include "type.h"
 #include "util.c"
-#include "alloc.c"
+#include "alloc_dalloc.c"
 
 int enter_name(MINODE *pmip, int ino, char *name)
 {
@@ -15,7 +15,14 @@ int enter_name(MINODE *pmip, int ino, char *name)
         if (pmip->INODE.i_block[i] == 0)
         {
             // allocate new block
-            balloc(pmip->dev);
+            int blk = balloc(pmip->dev);
+            if (blk == 0)
+            {
+                printf("failed to allocate block in enter_name\n");
+                return -1;
+            }
+
+            pmip->INODE.i_block[i] = blk;
             pmip->INODE.i_size += BLKSIZE;
             pmip->INODE.i_blocks += 2;
             pmip->dirty = 1;

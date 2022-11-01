@@ -118,6 +118,6 @@ int  fd, dev;
 int  nblocks, ninodes, bmap, imap, iblk;
 char line[128], cmd[32], pathname[128];
 
-char *disk = "mydiskcopy";     // change this to YOUR virtual
+char *disk = "mydisk";     // change this to YOUR virtual
 
 #endif

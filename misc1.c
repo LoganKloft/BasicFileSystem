@@ -3,7 +3,7 @@
 
 #include "type.h"
 #include "util.c"
-#include "alloc.c"
+#include "alloc_dalloc.c"
 
 int my_chmod(char *permissions, char *pathname)
 {

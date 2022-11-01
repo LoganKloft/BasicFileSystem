@@ -14,12 +14,12 @@
 
 #include "type.h"
 #include "util.c"
-#include "alloc.c"
+#include "alloc_dalloc.c"
 #include "cd_ls_pwd.c"
 #include "mkdir_creat.c"
 #include "rmdir.c"
 #include "link_unlink.c"
-#include "symlink_readlink.c"
+#include "symlink.c"
 #include "stat.c"
 #include "misc1.c"
 
