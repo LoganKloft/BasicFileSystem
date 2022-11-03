@@ -58,6 +58,12 @@ int my_rmdir(char *pathname)
     MINODE *mip = iget(dev, ino);
 
     // (2) verify MINODE is not busy and INODE is a DIR
+    if (!S_ISDIR(mip->INODE.i_mode))
+    {
+        printf("rmdir> pathname: %s is not a directory\n", pathname);
+        return -1;
+    }
+
     if (mip->refCount > 1)
     {
         printf("rmdir> pathname: %s is busy with %d references\n", pathname, mip->refCount);

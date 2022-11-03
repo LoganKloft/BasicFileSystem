@@ -131,9 +131,18 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "rmdir") == 0) my_rmdir(pathname);
     // else if (strcmp(cmd, "link") == 0) my_link(pathname);
     // else if (strcmp(cmd, "unlink") == 0) my_unlink(pathname);
-    // else if (strcmp(cmd, "symlink") == 0) my_symlink(pathname);
-    // else if (strcmp(cmd, "readlink") == 0) my_readlink(pathname);
-    // else if (strcmp(cmd, "stat") == 0) my_stat(pathname);
+    else if (strcmp(cmd, "symlink") == 0) 
+    {
+      char pathname2[256];
+      sscanf(line, "%s %s %s", cmd, pathname, pathname2);
+      my_symlink(pathname, pathname2);
+    }
+    else if (strcmp(cmd, "readlink") == 0)
+    {
+      char output[256];
+      my_readlink(pathname, output);
+    }
+    else if (strcmp(cmd, "stat") == 0) my_stat(pathname);
     else if (strcmp(cmd, "chmod") == 0)
     {
       char permissions[32];

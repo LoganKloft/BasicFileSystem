@@ -70,7 +70,12 @@ int ls_file(MINODE *mip, char *name)
   printf("%7s", name); // print file name
 
   if ((inode->i_mode & 0xF000)== 0xA000){
-    printf(" -> %s", mip->INODE.i_block);
+    char buf[BLKSIZE];
+    get_block(mip->dev, inode->i_block[0], buf);
+    char smlnk[61];
+    strncpy(smlnk, buf, inode->i_size);
+    smlnk[inode->i_size] = 0;
+    printf(" -> %s", smlnk);
   }
 
   char buff[50];
