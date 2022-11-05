@@ -12,14 +12,14 @@ int my_symlink(char *pathname1, char *pathname2)
     int oino = getino(pathname1);
     if (!oino)
     {
-        printf("symlink> file1: %s does not exist\n", pathname1);
+        printf("symlink> %s does not exist\n", pathname1);
         return -1;
     }
 
     int nino = getino(pathname2);
     if (nino)
     {
-        printf("symlink> file2: %s already exists\n", pathname2);
+        printf("symlink> %s already exists\n", pathname2);
     }
 
     // (2) create new file and change to type LNK type
@@ -42,13 +42,8 @@ int my_symlink(char *pathname1, char *pathname2)
     mip->INODE.i_mode = mode;
 
     // (3) update newfile
-    char *bname = basename(pathname1);
-    mip->INODE.i_block[0] = balloc(mip->dev);
-    char buf[BLKSIZE];
-    get_block(mip->dev, mip->INODE.i_block[0], buf);
-    memcpy(buf, bname, strlen(bname));
-    put_block(mip->dev, mip->INODE.i_block[0], buf);
-    mip->INODE.i_size = strlen(bname);
+    memcpy(mip->INODE.i_block, pathname1, strlen(pathname1));
+    mip->INODE.i_size = strlen(pathname1);
     mip->dirty = 1;
     iput(mip);
 
@@ -72,14 +67,10 @@ int my_readlink(char *pathname, char *buffer)
     }
 
     // (2) copy name from INODE's i_block[0] into buffer
-    char buf[BLKSIZE];
-    get_block(mip->dev, mip->INODE.i_block[0], buf);
     int len = mip->INODE.i_size;
-    strncpy(buffer, buf, len);
+    strncpy(buffer, mip->INODE.i_block, len);
     buffer[len] = 0;
     iput(mip);
-
-    printf("%s\n", buffer);
 
     // (3) return file size
     return len;

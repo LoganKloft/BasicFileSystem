@@ -112,7 +112,7 @@ int main(int argc, char *argv[ ])
   mount_root();
   
   while(1){
-    printf("input command : [ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|readlink|stat|chmod|utim|quit] ");
+    printf("input command : [ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit] ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = 0;
 
@@ -136,11 +136,6 @@ int main(int argc, char *argv[ ])
       char pathname2[256];
       sscanf(line, "%s %s %s", cmd, pathname, pathname2);
       my_symlink(pathname, pathname2);
-    }
-    else if (strcmp(cmd, "readlink") == 0)
-    {
-      char output[256];
-      my_readlink(pathname, output);
     }
     else if (strcmp(cmd, "stat") == 0) my_stat(pathname);
     else if (strcmp(cmd, "chmod") == 0)

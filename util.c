@@ -103,6 +103,7 @@ void iput(MINODE *mip)  // iput(): release a minode
 
   Write YOUR code here to write INODE back to disk
  *****************************************************/
+
    // get INODE of ino into buf[ ]    
    int ino = mip->ino;
    block    = (ino-1)/8 + iblk;

@@ -4,6 +4,7 @@
 
 #include "type.h"
 #include "util.c"
+#include "symlink.c"
 
 int cd(char* pathname)
 {
@@ -70,11 +71,11 @@ int ls_file(MINODE *mip, char *name)
   printf("%7s", name); // print file name
 
   if ((inode->i_mode & 0xF000)== 0xA000){
-    char buf[BLKSIZE];
-    get_block(mip->dev, inode->i_block[0], buf);
+    // not using my_readlink because pollutes output
     char smlnk[61];
-    strncpy(smlnk, buf, inode->i_size);
-    smlnk[inode->i_size] = 0;
+    int len = inode->i_size;
+    strncpy(smlnk, inode->i_block, len);
+    smlnk[len] = 0;
     printf(" -> %s", smlnk);
   }
 

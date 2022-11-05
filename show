@@ -1,4 +1,4 @@
-sudo mount mydiskcopy /mnt
+sudo mount mydisk /mnt
 sudo ls -a -i -l /mnt
-sudo umount mydiskcopy
+sudo umount mydisk
 
