@@ -11,9 +11,20 @@ int my_link(char* old_file, char* new_file)
     int old_file_inode, new_file_inode;
     MINODE *old_mip, *new_mip;
     // (1). // verify old_file exists and is not a DIR;
+
+    // If the old file location is told to me root then assign dev as the root dev
+    if (old_file[0] == '/')
+    {
+        dev = root->dev;
+    }
+    else // Else, change the dev to the current working directory
+    {
+        dev = running->cwd->dev;
+    }
+
     old_file_inode = getino(old_file);
 
-    if (old_file_inode == 1)
+    if (old_file_inode == -1)
     {
         printf("Old file doesn't exist\n");
         return -1;
@@ -60,34 +71,73 @@ int my_link(char* old_file, char* new_file)
 // THIS FUNCTION STILL HASN'T BEEN FIXED
 int my_unlink(char* filename)
 {
-    // int ino;
-    // MINODE *mip;
+    // ino = target i number, pino = parent i number
+    int ino, pino;
+    MINODE *mip, *pmip;
 
-    // // (1). get filenmae’s minode:
-    // ino = getino(filename);
-    // mip = iget(dev, ino);
-    // // check it’s a REG or symbolic LNK file; can not be a DIR
-    // // (2). // remove name entry from parent DIR’s data block:
-    // char parent[256], child[256];
+    // (1). get filenmae’s minode:
+    // If the old file location is told to me root then assign dev as the root dev
+    if (filename[0] == '/')
+    {
+        dev = root->dev;
+    }
+    else // Else, change the dev to the current working directory
+    {
+        dev = running->cwd->dev;
+    }
 
-    // strcpy(parent, dirname(filename));
-    // strcpy(child, basename(filename));
+    ino = getino(filename);
 
-    // pino = getino(parent);
-    // pimp = iget(dev, pino);
-    // rm_child(pmip, ino, child);
-    // pmip->dirty = 1;
-    // iput(pmip);
-    // // (3). // decrement INODE’s link_count by 1
-    // mip->INODE.i_links_count--;
-    // // (4). if (mip->INODE.i_links_count > 0)
-    // mip->dirty = 1; // for write INODE back to disk
-    // // (5). 
-    // else{ // if links_count = 0: remove filename
-    // // deallocate all data blocks in INODE;
-    // // deallocate INODE;
-    // }
-    // iput(mip); // release mip
+    if (ino == -1)
+    {
+        printf("File doesn't exist\n");
+        return -1;
+    }
+
+    mip = iget(dev, ino);
+
+    // check it’s a REG or symbolic LNK file; can not be a DIR
+    if ((mip->INODE.i_mode & 0xF000) == 0x4000)
+    {
+        printf("Cannot unlink a directory\n");
+        return -1;
+    }
+
+    // (2). // remove name entry from parent DIR’s data block:
+    char parent[256], child[256];
+
+    strcpy(parent, dirname(filename));
+    strcpy(child, basename(filename));
+
+    pino = getino(parent);
+    pmip = iget(dev, pino);
+
+    rm_child(pmip, child);
+
+    pmip->dirty = 1;
+
+    iput(pmip);
+
+    // (3). // decrement INODE’s link_count by 1
+    mip->INODE.i_links_count--;
+
+    // (4). 
+    if (mip->INODE.i_links_count > 0)
+        mip->dirty = 1; // for write INODE back to disk
+
+    // (5). 
+    else { // if links_count = 0: remove filename
+        if (mip->INODE.i_block[0] != 0 && !S_ISLNK(mip->INODE.i_mode))
+        {
+            // deallocate all data blocks in INODE;
+            bdalloc(dev, mip->INODE.i_block[0]);
+        }
+
+        // deallocate INODE;
+        idalloc(dev, ino);
+    }
+
+    iput(mip); // release mip
 }
 
 #endif

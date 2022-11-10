@@ -18,7 +18,6 @@ int rm_child(MINODE *pmip, char *name)
         dp = (char *)dp + dp->rec_len;
         total_len += dp->rec_len;
     }
-    
     // (2) delete name entry from parent directory
     if (total_len == 1024)
     {
@@ -32,10 +31,16 @@ int rm_child(MINODE *pmip, char *name)
         // (2.2) intermediate entry
         int shift_rec_len = dp->rec_len;
         dp = (char *)dp + dp->rec_len;
-        while(dp < buf + BLKSIZE)
+        while(dp < (buf + BLKSIZE))
         {
+            int ideal_length = 4 * ( (8 + dp->name_len + 3) / 4 );
+            if (ideal_length < dp->rec_len)
+            {
+                dp->rec_len += shift_rec_len;
+            }
+            int dpCurRecLen = dp->rec_len;
             memcpy((char *)dp - shift_rec_len, dp, dp->rec_len);
-            dp = (char *)dp + dp->rec_len;
+            dp = (char *)dp + dpCurRecLen;
         }
     }
 
