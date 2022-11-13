@@ -30,6 +30,7 @@ int init()
   int i, j;
   MINODE *mip;
   PROC   *p;
+  OFT *oftp;
 
   printf("init()\n");
 
@@ -39,6 +40,9 @@ int init()
     p->pid = i+1;           // pid = 1, 2, ..., NPROC
     p->uid = p->gid = 0;    // uid = gid = 0: SUPER user
     p->cwd = 0;             // CWD of process
+
+    // process starts with no opened files
+    for (int j = 0; j < NFD; j++) p->fd[j] = 0;
   }
 
   // (2)
@@ -52,6 +56,13 @@ int init()
 
   // (3)
   root = 0;
+
+  // (4) all ofts are free
+  for (i = 0; i < NOFT; i++)
+  {
+    oftp = &oft[i];
+    oftp->refCount = 0;
+  }
 }
 
 // load root INODE and set root pointer to it

@@ -87,6 +87,8 @@ DIR   *dp;
 #define BLKSIZE  1024
 #define NMINODE   128
 #define NPROC       2
+#define NOFT       64
+#define NFD        10
 
 typedef struct minode{
   INODE INODE;           // INODE structure on disk
@@ -98,15 +100,25 @@ typedef struct minode{
   struct mntable *mptr;  // for level-3
 }MINODE;
 
+typedef struct oft { // OpenFileTable
+  int mode; // 0 R | 1 W | 2 RW | 3 APP
+  int refCount;
+  MINODE *minodePtr;
+  int offset;
+} OFT;
+
 typedef struct proc{
   struct proc *next;
   int          pid;      // process ID  
   int          uid;      // user ID
   int          gid;
-  MINODE      *cwd;      // CWD directory pointer  
+  MINODE      *cwd;      // CWD directory pointer
+
+  OFT *fd[NFD];  
 }PROC;
 
 MINODE minode[NMINODE];
+OFT oft[NOFT];
 MINODE *root;
 PROC   proc[NPROC], *running;
 
