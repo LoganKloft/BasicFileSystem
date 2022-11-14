@@ -22,6 +22,9 @@
 #include "symlink.c"
 #include "stat.c"
 #include "misc1.c"
+#include "open_close_lseek.c"
+#include "read_cat.c"
+#include "write_cp.c"
 
 int quit();
 
@@ -123,7 +126,7 @@ int main(int argc, char *argv[ ])
   mount_root();
   
   while(1){
-    printf("input command : [ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit] ");
+    printf("[ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit]\n[open|close|lseek|read|cat|write|cp]\ninput command: ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = 0;
 
@@ -162,6 +165,20 @@ int main(int argc, char *argv[ ])
     }
     else if (strcmp(cmd, "utime") == 0) my_utime(pathname);
     else if (strcmp(cmd, "quit") == 0) quit();
+    else if (strcmp(cmd, "open") == 0)
+    {
+      char mode_string[32];
+      sscanf(line, "%s %s %s", cmd, pathname, mode_string);
+      open_file(pathname, mode_string);
+    }
+    else if (strcmp(cmd, "pfd") == 0) pfd();
+    else if (strcmp(cmd, "close") == 0) close_file_str(pathname);
+    else if (strcmp(cmd, "lseek") == 0)
+    {
+      char position[32];
+      sscanf(line, "%s %s %s", cmd, pathname, position);
+      my_lseek_str(pathname, position);
+    }
   }
 }
 

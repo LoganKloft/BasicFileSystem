@@ -181,4 +181,20 @@ int bdalloc(int dev, int bno)
     incFreeBlocks(dev);
 }
 
+OFT* oget()
+{
+    OFT *oftp;
+    for (int i = 0; i < NOFT; i++)
+    {
+        oftp = &oft[i];
+        if (oftp->refCount == 0)
+        {
+            return oftp;
+        }
+    }
+
+    printf("PANIC: no more free ofts\n");
+    return 0;
+}
+
 #endif
