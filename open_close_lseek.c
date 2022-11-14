@@ -322,4 +322,78 @@ int my_lseek_str(char* fd_string, char* position_string)
     return my_lseek(fd, position);
 }
 
+// does not verify mode (can duplicate R, RW, APP)
+int dup(int fd)
+{
+    if (fd < 0 || fd >= NFD)
+    {
+        printf("dup> fd not valid\n");
+        return -1;
+    }
+
+    OFT *oftp = running->fd[fd];
+    if (!oftp)
+    {
+        printf("dup> fd does not point to an instance\n");
+        return -1;
+    }
+
+    int i = 0;
+    for (; i < NFD; i++)
+    {
+        if (!running->fd[i])
+        {
+            running->fd[i] = oftp;
+        }
+    }
+
+    if (i == NFD)
+    {
+        printf("dup> no free file descriptors\n");
+        return -1;
+    }
+
+    oftp->refCount++;
+    return i;
+}
+
+// does not verify modes (can duplicate R, RW, APP)
+int dup2(int fd, int gd)
+{
+    if (fd < 0 || fd >= NFD)
+    {
+        printf("dup> fd not valid\n");
+        return -1;
+    }
+
+    if (gd < 0 || gd >= NFD)
+    {
+        printf("dup> gd not valid\n");
+        return -1;
+    }
+
+    OFT *foftp = running->fd[fd];
+    if (!foftp)
+    {
+        printf("dup> fd does not point to an instance\n");
+        return -1;
+    }
+
+    if (gd == fd)
+    {
+        return gd;
+    }
+
+    OFT *goftp = running->fd[gd];
+    if (goftp)
+    {
+        close_file(gd);
+    }
+
+    running->fd[gd] = running->fd[fd];
+    foftp->refCount++;
+
+    return gd;
+}
+
 #endif
