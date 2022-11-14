@@ -179,6 +179,12 @@ int main(int argc, char *argv[ ])
       sscanf(line, "%s %s %s", cmd, pathname, position);
       my_lseek_str(pathname, position);
     }
+    else if (strcmp(cmd, "write") == 0)
+    {
+      char content[BLKSIZE];
+      sscanf(line, "%s %s %s", cmd, pathname, content);
+      my_write_str(pathname, content);
+    }
   }
 }
 
