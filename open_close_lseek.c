@@ -83,10 +83,25 @@ int truncate(MINODE *mip)
         {
             if (buf[i])
             {
+                int buf2[256];
+                bzero(buf2, BLKSIZE);
+                get_block(mip->dev, buf[i], buf2);
+
+                for (int j = 0; j < 256; j++)
+                {
+                    if (buf2[j])
+                    {
+                        bdalloc(mip->dev, buf2[j]);
+                        buf2[j] = 0;
+                    }
+                }
+
                 bdalloc(mip->dev, buf[i]);
                 buf[i] = 0;
             }
         }
+        bdalloc(mip->dev, inode->i_block[13]);
+        inode->i_block[13] = 0;
     }
 
     // (2) update time field
@@ -168,7 +183,7 @@ int open_file(char* pathname, char* mode_string)
             oftp->offset = 0;
             break;
         case 1:
-            // truncate(mip);
+            truncate(mip);
             oftp->offset = 0;
             break;
         case 2:
