@@ -143,7 +143,7 @@ int my_write(int fd, char buf[ ], int nbytes)
 
     mip->dirty = 1;
     printf("wrote %d char into file descriptor fd=%d\n", total_wrote, fd);
-    return nbytes;
+    return total_wrote;
 }
 
 int my_cp(char* source, char* destination)
