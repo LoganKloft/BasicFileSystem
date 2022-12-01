@@ -153,7 +153,7 @@ int my_cp(char* source, char* destination)
     int n = 0;
     int fd = open_file(source, "0");
 
-    // check if dst exists
+    // check if destination exists
     int ino = getino(destination);
     if (ino == 0)
     {
