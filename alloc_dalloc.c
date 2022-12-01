@@ -131,8 +131,9 @@ int balloc(int dev)
             put_block(dev, bmap, buf);
             decFreeBlocks(dev);
 
-            printf("Allocated block= %d\n", i);
-            return i;
+            // i + 1 change
+            printf("Allocated block= %d\n", i + 1);
+            return i + 1;
         }
     }
 
@@ -162,6 +163,8 @@ int idalloc(int dev, int ino)
 
 int bdalloc(int dev, int bno)
 {
+    // bno - 1 changed
+    bno = bno - 1;
     int i;
     char buf[BLKSIZE];
 

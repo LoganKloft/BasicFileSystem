@@ -47,6 +47,7 @@ int my_write(int fd, char buf[ ], int nbytes)
     INODE *ip = &mip->INODE;
 
     int total_wrote = 0;
+    int first = 0;
     while (nbytes > 0)
     {
         // compute logical block
@@ -86,44 +87,108 @@ int my_write(int fd, char buf[ ], int nbytes)
         }
         else {
             // double indirect block
+
+            // check if [13] is allocated
             int ibuf[256];
             if (ip->i_block[13] == 0)
             {
+                // if not, allocate new block
                 ip->i_block[13] = balloc(mip->dev);
+                // load block
                 get_block(mip->dev, ip->i_block[13], ibuf);
+                // bzero block
                 bzero(ibuf, BLKSIZE);
+                // changed: [13], save changed blocks
                 put_block(mip->dev, ip->i_block[13], ibuf);
             }
-            get_block(mip->dev, ip->i_block[13], ibuf);
 
-            // get second indirect block
-            int second_lbk = (lbk - 256 - 12) / 256;
-            
+            // get indirect block
+            get_block(mip->dev, ip->i_block[13], ibuf);
+            // get block of indirect block
+            int first_index = (lbk - 256 - 12) / 256;
+            first = ibuf[first_index];
+            // check if allocated
             int iibuf[256];
-            if (ibuf[second_lbk] == 0)
+            if (first == 0)
             {
-                ibuf[second_lbk] = balloc(mip->dev);
-                get_block(mip->dev, ibuf[second_lbk], iibuf);
+                // if not, allocate new block
+                first = balloc(mip->dev);
+                ibuf[first_index] = first;
+                // load block
+                get_block(mip->dev, first, iibuf);
+                // bzero block
                 bzero(iibuf, BLKSIZE);
+                // changed: [13] and allocated block, save changed blocks
+                put_block(mip->dev, first, iibuf);
                 put_block(mip->dev, ip->i_block[13], ibuf);
-                put_block(mip->dev, ibuf[second_lbk], iibuf);
             }
-            get_block(mip->dev, ibuf[second_lbk], iibuf);
             
-            blk = iibuf[(lbk - 256 - 12) % 256];
-            if (blk == 0)
+            // get indirect block of indirect block
+            get_block(mip->dev, first, iibuf);
+            int second_index = (lbk - 256 - 12) % 256;
+            int second = iibuf[second_index];
+            // check if allocated
+            int iiibuf[256]; // 
+            if (second == 0)
             {
-                blk = iibuf[(lbk - 256 - 12) % 256] = balloc(mip->dev);
-                char iiibuf[BLKSIZE];
-                get_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
+                // if not, allocate new block
+                second = balloc(mip->dev);
+                iibuf[second_index] = second;
+                // load block
+                get_block(mip->dev, second, iiibuf);
+                // bzero block
                 bzero(iiibuf, BLKSIZE);
-                put_block(mip->dev, ibuf[second_lbk], iibuf);
-                put_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
+                // changed: [1st indirect block] and allocated block, save changed blocks
+                put_block(mip->dev, second, iiibuf);
+                put_block(mip->dev, first, iibuf);
             }
+
+            // get blk
+            blk = second;
+            // check if allocated
+            // if not, allocate new block
+            // load bloack
+            // bzero block
+            // changed: [2nd indirect block] and allocated block, save changed blocks
+
+            // int ibuf[256];
+            // if (ip->i_block[13] == 0)
+            // {
+            //     ip->i_block[13] = balloc(mip->dev);
+            //     get_block(mip->dev, ip->i_block[13], ibuf);
+            //     bzero(ibuf, BLKSIZE);
+            //     put_block(mip->dev, ip->i_block[13], ibuf);
+            // }
+            // get_block(mip->dev, ip->i_block[13], ibuf);
+
+            // // get second indirect block
+            // int second_lbk = (lbk - 256 - 12) / 256;
+            
+            // int iibuf[256];
+            // if (ibuf[second_lbk] == 0)
+            // {
+            //     ibuf[second_lbk] = balloc(mip->dev);
+            //     get_block(mip->dev, ibuf[second_lbk], iibuf);
+            //     bzero(iibuf, BLKSIZE);
+            //     put_block(mip->dev, ip->i_block[13], ibuf);
+            //     put_block(mip->dev, ibuf[second_lbk], iibuf);
+            // }
+            // get_block(mip->dev, ibuf[second_lbk], iibuf);
+            
+            // blk = iibuf[(lbk - 256 - 12) % 256];
+            // if (blk == 0)
+            // {
+            //     blk = iibuf[(lbk - 256 - 12) % 256] = balloc(mip->dev);
+            //     char iiibuf[BLKSIZE];
+            //     get_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
+            //     bzero(iiibuf, BLKSIZE);
+            //     put_block(mip->dev, ibuf[second_lbk], iibuf);
+            //     put_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
+            // }
         }
 
         // write to block the lesser of remain and nbytes
-        printf("blk: %d\n", blk);
+        // printf("first: %d blk: %d\n", first, blk);
         char wbuf[BLKSIZE];
         bzero(wbuf, BLKSIZE);
         get_block(mip->dev, blk, wbuf);
@@ -142,7 +207,7 @@ int my_write(int fd, char buf[ ], int nbytes)
     }
 
     mip->dirty = 1;
-    printf("wrote %d char into file descriptor fd=%d\n", total_wrote, fd);
+    // printf("wrote %d char into file descriptor fd=%d\n", total_wrote, fd);
     return total_wrote;
 }
 
@@ -184,7 +249,7 @@ int my_cp(char* source, char* destination)
 
     while(n = my_read(fd, mybuff, BLKSIZE)){
         mybuff[n] = 0;
-        write(gd, mybuff, n);  // notice the n in write()
+        my_write(gd, mybuff, n);  // notice the n in write()
         memset(mybuff, '\0', BLKSIZE);
     }
 

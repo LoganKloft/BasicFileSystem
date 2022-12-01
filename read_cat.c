@@ -63,6 +63,7 @@ int my_read(int fd, char buf[ ], int nbytes)
 
     while (nbytes && available)
     {
+        int test = 0;
         // compute logical block
         int lbk = oftp->offset / BLKSIZE;
         int startByte = oftp->offset % BLKSIZE;
@@ -90,12 +91,13 @@ int my_read(int fd, char buf[ ], int nbytes)
             
             int iibuf[256];
             get_block(mip->dev, ibuf[second_lbk], iibuf);
+            test = ibuf[0];
             
             blk = iibuf[(lbk - 256 - 12) % 256];
         }
 
         // read blk
-        printf("lbk: %d blk: %d offset: %d\n", lbk, blk, oftp->offset);
+        // printf("test: %d lbk: %d blk: %d offset: %d\n", test, lbk, blk, oftp->offset);
         char rbuf[BLKSIZE];
         bzero(rbuf, BLKSIZE);
         get_block(mip->dev, blk, rbuf);
@@ -115,7 +117,7 @@ int my_read(int fd, char buf[ ], int nbytes)
         oftp->offset += read_amount;
     }
 
-    printf("read %d char from file descriptor fd=%d\n", total_read, fd);
+    // printf("read %d char from file descriptor fd=%d\n", total_read, fd);
     return total_read;
 }
 

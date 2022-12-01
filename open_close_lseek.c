@@ -43,8 +43,6 @@ int pfd()
 int truncate(MINODE *mip)
 {
     // (1) release mip's data blocks
-    char *buf[BLKSIZE];
-
     INODE *inode = &mip->INODE;
 
     // release direct blocks
@@ -55,64 +53,41 @@ int truncate(MINODE *mip)
             bdalloc(mip->dev, inode->i_block[i]);
             inode->i_block[i] = 0;
         }
-        else
-        {
-            break;
-        }
     }
 
     // release indirect blocks
-    char *indirectBlock[BLKSIZE];
     if (inode->i_block[12])
     {
-        get_block(mip->dev, inode->i_block[12], indirectBlock);
-        for(int i = 0; i < BLKSIZE; i += 4)
+        int buf[256];
+        bzero(buf, BLKSIZE);
+        get_block(mip->dev, inode->i_block[12], buf);
+        for (int i = 0; i < 256; i++)
         {
-            if (indirectBlock[i])
+            if (buf[i])
             {
-                bdalloc(mip->dev, indirectBlock[i]);
-            }
-            else
-            {
-                break;
+                bdalloc(mip->dev, buf[i]);
+                buf[i] = 0;
             }
         }
         bdalloc(mip->dev, inode->i_block[12]);
         inode->i_block[12] = 0;
     }
-
+    
     // release double indirect blocks
-    char *doubleIndirectBlock[BLKSIZE];
     if (inode->i_block[13])
     {
-        get_block(mip->dev, inode->i_block[13], indirectBlock);
-        for(int i = 0; i < BLKSIZE; i += 4)
+        int buf[256];
+        bzero(buf, BLKSIZE);
+        get_block(mip->dev, inode->i_block[13], buf);
+        for (int i = 0; i < 256; i++)
         {
-            if (indirectBlock[i])
+            if (buf[i])
             {
-                get_block(mip->dev, indirectBlock[i], doubleIndirectBlock);
-                for (int j = 0; j < BLKSIZE; j += 4)
-                {
-                    if (doubleIndirectBlock[j])
-                    {
-                        bdalloc(mip->dev, doubleIndirectBlock[j]);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                bdalloc(mip->dev, indirectBlock[i]);
-            }
-            else
-            {
-                break;
+                bdalloc(mip->dev, buf[i]);
+                buf[i] = 0;
             }
         }
-        bdalloc(mip->dev, inode->i_block[13]);
-        inode->i_block[13] = 0;
     }
-    
 
     // (2) update time field
     mip->INODE.i_mtime = time(0L); // update modify time
@@ -193,7 +168,7 @@ int open_file(char* pathname, char* mode_string)
             oftp->offset = 0;
             break;
         case 1:
-            truncate(mip);
+            // truncate(mip);
             oftp->offset = 0;
             break;
         case 2:
