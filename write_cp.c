@@ -1,6 +1,10 @@
 #ifndef WRITECP
 #define WRITECP
 
+#include "mkdir_creat.c"
+#include "read_cat.c"
+#include "open_close_lseek.c"
+
 int my_write_str(char *fd_string, char *content)
 {
     // (1) convert fd to integer
@@ -64,12 +68,13 @@ int my_write(int fd, char buf[ ], int nbytes)
         else if (lbk >= 12 && lbk < 256 + 12)
         {
             // indirect block
-            int *ibuf[256];
+            int ibuf[256];
             if (ip->i_block[12] == 0)
             {
                 ip->i_block[12] = balloc(mip->dev);
                 get_block(mip->dev, ip->i_block[12], ibuf);
                 bzero(ibuf, BLKSIZE);
+                put_block(mip->dev, ip->i_block[12], ibuf);
             }
             get_block(mip->dev, ip->i_block[12], ibuf);
             blk = ibuf[lbk - 12];
@@ -81,25 +86,27 @@ int my_write(int fd, char buf[ ], int nbytes)
         }
         else {
             // double indirect block
-            int *ibuf[256];
+            int ibuf[256];
             if (ip->i_block[13] == 0)
             {
                 ip->i_block[13] = balloc(mip->dev);
                 get_block(mip->dev, ip->i_block[13], ibuf);
                 bzero(ibuf, BLKSIZE);
+                put_block(mip->dev, ip->i_block[13], ibuf);
             }
             get_block(mip->dev, ip->i_block[13], ibuf);
 
             // get second indirect block
             int second_lbk = (lbk - 256 - 12) / 256;
             
-            int *iibuf[256];
+            int iibuf[256];
             if (ibuf[second_lbk] == 0)
             {
                 ibuf[second_lbk] = balloc(mip->dev);
                 get_block(mip->dev, ibuf[second_lbk], iibuf);
                 bzero(iibuf, BLKSIZE);
                 put_block(mip->dev, ip->i_block[13], ibuf);
+                put_block(mip->dev, ibuf[second_lbk], iibuf);
             }
             get_block(mip->dev, ibuf[second_lbk], iibuf);
             
@@ -107,6 +114,7 @@ int my_write(int fd, char buf[ ], int nbytes)
             if (blk == 0)
             {
                 blk = iibuf[(lbk - 256 - 12) % 256] = balloc(mip->dev);
+                // save iblock change
                 put_block(mip->dev, ibuf[second_lbk], iibuf);
             }
         }
@@ -133,6 +141,31 @@ int my_write(int fd, char buf[ ], int nbytes)
     mip->dirty = 1;
     printf("wrote %d char into file descriptor fd=%d\n", total_wrote, fd);
     return nbytes;
+}
+
+int my_cp(char *src, char *dst)
+{
+    int fd = open_file(src, "0");
+
+    // check if dst exists
+    int ino = getino(dst);
+    if (ino == 0)
+    {
+        // does not exist, create file
+        my_creat(dst);
+    }
+
+    int gd = open_file(dst, "1");
+
+    int n = 0;
+    char buf[BLKSIZE];
+    while(n = my_read(fd, buf, BLKSIZE))
+    {
+        my_write(gd, buf, n);
+    }
+
+    close_file(fd);
+    close_file(gd);
 }
 
 #endif

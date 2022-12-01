@@ -185,6 +185,20 @@ int main(int argc, char *argv[ ])
       sscanf(line, "%s %s %s", cmd, pathname, content);
       my_write_str(pathname, content);
     }
+    else if (strcmp(cmd, "read") == 0)
+    {
+      printf("read %d", read_file());
+    }
+    else if (strcmp(cmd, "cat") == 0)
+    {
+      my_cat(pathname);
+    }
+    else if (strcmp(cmd, "cp") == 0)
+    {
+      char dst[BLKSIZE];
+      sscanf(line, "%s %s %s", cmd, pathname, dst);
+      my_cp(pathname, dst);
+    }
   }
 }
 
