@@ -114,8 +114,11 @@ int my_write(int fd, char buf[ ], int nbytes)
             if (blk == 0)
             {
                 blk = iibuf[(lbk - 256 - 12) % 256] = balloc(mip->dev);
-                // save iblock change
+                char iiibuf[BLKSIZE];
+                get_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
+                bzero(iiibuf, BLKSIZE);
                 put_block(mip->dev, ibuf[second_lbk], iibuf);
+                put_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
             }
         }
 
