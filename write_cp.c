@@ -146,25 +146,46 @@ int my_write(int fd, char buf[ ], int nbytes)
     return nbytes;
 }
 
-int my_cp(char *src, char *dst)
+int my_cp(char* source, char* destination)
 {
-    int fd = open_file(src, "0");
+    printf("Attempting to copy %s into %s\n", source, destination);
+
+    int n = 0;
+    int fd = open_file(source, "0");
 
     // check if dst exists
-    int ino = getino(dst);
+    int ino = getino(destination);
     if (ino == 0)
     {
         // does not exist, create file
-        my_creat(dst);
+        my_creat(destination);
     }
 
-    int gd = open_file(dst, "1");
+    int gd = open_file(destination, "1");
 
-    int n = 0;
-    char buf[BLKSIZE];
-    while(n = my_read(fd, buf, BLKSIZE))
+    if (fd == -1 || gd == -1)
     {
-        my_write(gd, buf, n);
+        if (fd == -1)
+        {
+            printf("Source file wasn't opened properly and now aborting from command.\n");
+            close_file(fd);
+        }
+        if (gd == -1)
+        {
+            printf("Destination file wasn't opened properly and now aborting from command.\n");
+            close_file(gd);
+        }
+        return -1;
+    }
+
+    char mybuff[BLKSIZE] = {0};
+
+    memset(mybuff, '\0', BLKSIZE);
+
+    while(n = my_read(fd, mybuff, BLKSIZE)){
+        mybuff[n] = 0;
+        write(gd, mybuff, n);  // notice the n in write()
+        memset(mybuff, '\0', BLKSIZE);
     }
 
     close_file(fd);
