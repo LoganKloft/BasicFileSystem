@@ -25,6 +25,7 @@
 #include "open_close_lseek.c"
 #include "read_cat.c"
 #include "write_cp.c"
+#include "mount_umount.c"
 
 int quit();
 
@@ -66,19 +67,29 @@ int init()
     oftp = &oft[i];
     oftp->refCount = 0;
   }
+
+  // (5) set all dev = 0 for mountTables
+  for (int i = 0; i < NMTABLE; i++)
+  {
+    mountTable[i].dev = 0;
+  }
 }
 
 // load root INODE and set root pointer to it
 int mount_root()
 {  
   printf("mount_root()\n");
+  printf("Enter filesystem: ");
+  char filesys[64] = {0};
+  fgets(filesys, 64, stdin);
+  filesys[strlen(filesys) - 1] = 0;
 
   int ino;
   char buf[BLKSIZE];
 
   printf("checking EXT2 FS ....");
-  if ((fd = open(disk, O_RDWR)) < 0){
-    printf("open %s failed\n", disk);
+  if ((fd = open(filesys, O_RDWR)) < 0){
+    printf("open %s failed\n", filesys);
     exit(1);
   }
 
@@ -118,6 +129,17 @@ int mount_root()
   proc[1].cwd = iget(dev, 2);
 
   printf("root refCount = %d\n", root->refCount);
+
+  // update mountTable[0]
+  MOUNT *mptr = &mountTable[0];
+  mptr->dev = dev;
+  mptr->ninodes = ninodes;
+  mptr->nblocks = nblocks;
+  mptr->bmap = bmap;
+  mptr->imap = imap;
+  mptr->iblk = iblk;
+  strcpy(mptr->name, filesys);
+  strcpy(mptr->mount_name, "/");
 }
 
 int main(int argc, char *argv[ ])
@@ -126,7 +148,7 @@ int main(int argc, char *argv[ ])
   mount_root();
   
   while(1){
-    printf("[ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit]\n[open|close|lseek|read|cat|write|cp]\ninput command: ");
+    printf("[ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit]\n[open|close|lseek|read|cat|write|cp|mount|umount]\ninput command: ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = 0;
 
@@ -199,6 +221,13 @@ int main(int argc, char *argv[ ])
       sscanf(line, "%s %s %s", cmd, pathname, dst);
       my_cp(pathname, dst);
     }
+    else if (strcmp(cmd, "mount") == 0)
+    {
+      char mount_name[64] = {0};
+      sscanf(line, "%s %s %s", cmd, pathname, mount_name);
+      my_mount(pathname, mount_name);
+    }
+    else if (strcmp(cmd, "umount") == 0) my_umount(pathname);
   }
 }
 

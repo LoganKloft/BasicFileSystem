@@ -68,7 +68,7 @@ MINODE *iget(int dev, int ino)
        blk    = (ino-1)/8 + iblk;
        offset = (ino-1) % 8;
 
-       //printf("iget: ino=%d blk=%d offset=%d\n", ino, blk, offset);
+      //  printf("iget: ino=%d blk=%d offset=%d\n", ino, blk, offset);
 
        get_block(dev, blk, buf);    // buf[ ] contains this INODE
        ip = (INODE *)buf + offset;  // this INODE in buf[ ] 
@@ -196,6 +196,18 @@ int getino(char *pathname) // return ino of pathname
 
    iput(mip);
    return ino;
+}
+
+MOUNT* getmptr(int dev)
+{
+   for (int i = 0; i < NMTABLE; i++)
+   {
+      if (mountTable[i].dev == dev)
+      {
+         return &mountTable[i];
+      }
+   }
+   return 0;
 }
 
 // These 2 functions are needed for pwd()
