@@ -41,9 +41,12 @@ int init()
   // (1)
   for (i=0; i<NPROC; i++){
     p = &proc[i];
-    p->pid = i+1;           // pid = 1, 2, ..., NPROC
+    p->next = 0;
+    p->pid = i;           // pid = 0, 1, ..., NPROC - 1
     p->uid = p->gid = 0;    // uid = gid = 0: SUPER user
+    p->ppid = 0;
     p->cwd = 0;             // CWD of process
+    p->status = 0;
 
     // process starts with no opened files
     for (int j = 0; j < NFD; j++) p->fd[j] = 0;
@@ -136,11 +139,15 @@ int mount_root()
 
   printf("creating P0 as running process\n");
   running = &proc[0];
+  running->status = 1;
   running->cwd = iget(dev, 2);
 
   // WRTIE code here to create P1 as a USER process
   printf("creating P1 as USER process\n");
+  proc[1].uid = 2;
   proc[1].cwd = iget(dev, 2);
+  proc[1].status = 1;
+  running->next = &proc[1];
 
   printf("root refCount = %d\n", root->refCount);
 }
@@ -231,6 +238,10 @@ int main(int argc, char *argv[ ])
       my_mount(pathname, mount_name);
     }
     else if (strcmp(cmd, "umount") == 0) my_umount(pathname);
+    else if (strcmp(cmd, "cs") == 0) my_cs();
+    else if (strcmp(cmd, "fork") == 0) my_fork();
+    else if (strcmp(cmd, "ps") == 0) my_ps();
+    else if (strcmp(cmd, "kill") == 0) my_kill(pathname);
   }
 }
 

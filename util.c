@@ -376,7 +376,7 @@ int my_access(char *filename, char mode)
 
    
    int ino = getino(filename);
-   mip = iget(dev, ino);
+   MINODE *mip = iget(dev, ino);
 
    if (mip->INODE.i_uid == running->uid)
    {
@@ -397,6 +397,7 @@ int my_access(char *filename, char mode)
    }
    else
    {
+      int i_mode = mip->INODE.i_mode;
       // check other permission bits
       switch (mode)
       {
@@ -417,24 +418,149 @@ int my_access(char *filename, char mode)
    return r;
 }
 
+// switch running process to next in queue
 int my_cs()
 {
+   // find next valid process
+   PROC *nextProc = running->next;
+   while(nextProc && nextProc->status == 2)
+   {
+      printf("P%d : I am dying!\n", nextProc->pid);
+      nextProc->status = 0;
+      nextProc = nextProc->next;
+   }
 
+   if (!nextProc)
+   {
+      printf("P%d switch process to P%d\n", running->pid, running->pid);
+      running->next = 0;
+      return 1;
+   }
+
+   // save running process
+   // add old running process to end of new running process
+   PROC *saveOld = running;
+   running = nextProc;
+   while (nextProc->next)
+   {
+      nextProc = nextProc->next;
+   }
+   nextProc->next = saveOld;
+   saveOld->next = 0;
+   printf("P%d switch process to P%d\n", saveOld->pid, running->pid);
 }
 
+// add a new process to end of queue whose parent is the running process
 int my_fork()
 {
+   // find free PROC
+   PROC *pptr = 0;
+   for (int i = 0; i < NPROC; i++)
+   {
+      if (proc[i].status == 0)
+      {
+         pptr = &proc[i];
+         break;
+      }
+   }
 
+   if (!pptr)
+   {
+      printf("no more proc\n");
+      return 0;
+   }
+
+   // update free PROC
+   pptr->next = 0;
+   pptr->uid = running->uid;
+   pptr->gid = running->gid;
+   pptr->ppid = running->pid;
+   pptr->status = 1;
+   pptr->cwd = running->cwd;
+
+   // does not inherit FDs
+   // for (int i = 0; i < NFD; i++)
+   // {
+   //    pptr->fd[i] = running->fd[i];
+   // }
+
+   // find last process in queue
+   PROC *last = running;
+   while (last->next)
+   {
+      last = last->next;
+   }
+
+   // add free PROC to last process in queue
+   last->next = pptr;
+
+   return 1;
 }
 
+// display processes in the process queue
 int my_ps()
 {
+   printf("==================================================\n");
+   PROC *pptr = running;
+   while (pptr)
+   {
+      printf("P%d[%d] ==> ", pptr->pid, pptr->uid);
+      pptr = pptr->next;
+   }
+   putchar('\n');
+   printf("==================================================\n");
 
+   return 1;
 }
 
-int my_kill(char *pid)
+// mark a process as dead
+int my_kill(char *pid_str)
 {
+   int pid = atoi(pid_str);
+   if (pid == 0)
+   {
+      printf("can't kill P0\n");
+      return 0;
+   }
 
+   if (pid > NPROC)
+   {
+      printf("invalid pid\n");
+      return 0;
+   }
+
+   if (running->pid == pid)
+   {
+      printf("try calling quit :-)\n");
+      return 0;
+   }
+
+   PROC *pptr = running;
+
+   while (pptr && pptr->pid != pid)
+   {
+      pptr = pptr->next;
+   }
+
+   if (!pptr)
+   {
+      printf("invalid pid\n");
+      return 0;
+   }
+
+   // make dead
+   pptr->status = 2;
+
+   // close all open fds and set to 0
+   for(int i = 0; i < NFD; i++)
+   {
+      if (pptr->fd[i] > 0)
+      {
+         close_file(i);
+      }
+      pptr->fd[i] = 0;
+   }
+   return 1;
 }
 
 #endif

@@ -86,7 +86,7 @@ DIR   *dp;
 
 #define BLKSIZE  1024
 #define NMINODE   128
-#define NPROC       2
+#define NPROC       4
 #define NOFT       64
 #define NFD        10
 #define NMTABLE     8
@@ -125,6 +125,8 @@ typedef struct proc{
   int          pid;      // process ID  
   int          uid;      // user ID
   int          gid;
+  int         ppid;      // parent process ID
+  int       status;      // 0 = free, 1 = alive, 2 = dead
   MINODE      *cwd;      // CWD directory pointer
 
   OFT *fd[NFD];  
