@@ -176,6 +176,11 @@ int search(MINODE *mip, char *name)
 
 int getino(char *pathname) // return ino of pathname   
 {
+   if (!pathname || !strlen(pathname))
+   {
+      return running->cwd->ino;
+   }
+
   int i, ino, blk, offset;
   char buf[BLKSIZE];
   INODE *ip;
@@ -357,6 +362,79 @@ int findino(MINODE *mip, u32 *myino) // myino = i# of . return i# of ..
      dp = (DIR *)cp;
    }
    return 0;
+}
+
+// mode = r | w | x
+int my_access(char *filename, char mode)
+{
+   int r = 0;
+   if (running->uid == 0)
+   {
+      // super user always has access
+      return 1;
+   }
+
+   
+   int ino = getino(filename);
+   mip = iget(dev, ino);
+
+   if (mip->INODE.i_uid == running->uid)
+   {
+      // check owner permission bits
+      int i_mode = mip->INODE.i_mode;
+      switch (mode)
+      {
+         case 'r':
+            r = i_mode & 0x0100 ? 1 : 0;
+            break;
+         case 'w':
+            r = i_mode & 0x0080 ? 1 : 0;
+            break;
+         case 'x':
+            r = i_mode & 0x0040 ? 1 : 0;
+            break;
+      }
+   }
+   else
+   {
+      // check other permission bits
+      switch (mode)
+      {
+         case 'r':
+            r = i_mode & 0x0004 ? 1 : 0;
+            break;
+         case 'w':
+            r = i_mode & 0x0002 ? 1 : 0;
+            break;
+         case 'x':
+            r = i_mode & 0x0001 ? 1 : 0;
+            break;
+      }
+   }
+
+   iput(mip);
+
+   return r;
+}
+
+int my_cs()
+{
+
+}
+
+int my_fork()
+{
+
+}
+
+int my_ps()
+{
+
+}
+
+int my_kill(char *pid)
+{
+
 }
 
 #endif

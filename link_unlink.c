@@ -35,6 +35,7 @@ int my_link(char* old_file, char* new_file)
     if ((old_mip->INODE.i_mode & 0xF000) == 0x4000)
     {
         printf("Cannot hard link to a directory\n");
+        iput(old_mip);
         return -1;
     }
     // check omip->INODE file type (must not be DIR).
@@ -68,7 +69,6 @@ int my_link(char* old_file, char* new_file)
     iput(new_mip);
 }
 
-// THIS FUNCTION STILL HASN'T BEEN FIXED
 int my_unlink(char* filename)
 {
     // ino = target i number, pino = parent i number
@@ -96,10 +96,19 @@ int my_unlink(char* filename)
 
     mip = iget(dev, ino);
 
+    // check for permission to unlink file
+    if (running->uid != mip->INODE.i_uid)
+    {
+        printf("unlink> UID %d is not the owner of %s\n", running->uid, filename);
+        iput(mip);
+        return -1;
+    }
+
     // check it’s a REG or symbolic LNK file; can not be a DIR
     if ((mip->INODE.i_mode & 0xF000) == 0x4000)
     {
         printf("Cannot unlink a directory\n");
+        iput(mip);
         return -1;
     }
 
@@ -130,11 +139,11 @@ int my_unlink(char* filename)
         if (mip->INODE.i_block[0] != 0 && !S_ISLNK(mip->INODE.i_mode))
         {
             // deallocate all data blocks in INODE;
-            bdalloc(dev, mip->INODE.i_block[0]);
+            bdalloc(mip->dev, mip->INODE.i_block[0]);
         }
 
         // deallocate INODE;
-        idalloc(dev, ino);
+        idalloc(mip->dev, ino);
     }
 
     iput(mip); // release mip

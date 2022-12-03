@@ -145,46 +145,6 @@ int my_write(int fd, char buf[ ], int nbytes)
 
             // get blk
             blk = second;
-            // check if allocated
-            // if not, allocate new block
-            // load bloack
-            // bzero block
-            // changed: [2nd indirect block] and allocated block, save changed blocks
-
-            // int ibuf[256];
-            // if (ip->i_block[13] == 0)
-            // {
-            //     ip->i_block[13] = balloc(mip->dev);
-            //     get_block(mip->dev, ip->i_block[13], ibuf);
-            //     bzero(ibuf, BLKSIZE);
-            //     put_block(mip->dev, ip->i_block[13], ibuf);
-            // }
-            // get_block(mip->dev, ip->i_block[13], ibuf);
-
-            // // get second indirect block
-            // int second_lbk = (lbk - 256 - 12) / 256;
-            
-            // int iibuf[256];
-            // if (ibuf[second_lbk] == 0)
-            // {
-            //     ibuf[second_lbk] = balloc(mip->dev);
-            //     get_block(mip->dev, ibuf[second_lbk], iibuf);
-            //     bzero(iibuf, BLKSIZE);
-            //     put_block(mip->dev, ip->i_block[13], ibuf);
-            //     put_block(mip->dev, ibuf[second_lbk], iibuf);
-            // }
-            // get_block(mip->dev, ibuf[second_lbk], iibuf);
-            
-            // blk = iibuf[(lbk - 256 - 12) % 256];
-            // if (blk == 0)
-            // {
-            //     blk = iibuf[(lbk - 256 - 12) % 256] = balloc(mip->dev);
-            //     char iiibuf[BLKSIZE];
-            //     get_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
-            //     bzero(iiibuf, BLKSIZE);
-            //     put_block(mip->dev, ibuf[second_lbk], iibuf);
-            //     put_block(mip->dev, iibuf[(lbk - 256 - 12) % 256], iiibuf);
-            // }
         }
 
         // write to block the lesser of remain and nbytes

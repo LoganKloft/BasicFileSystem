@@ -144,6 +144,7 @@ int open_file(char* pathname, char* mode_string)
     if (!S_ISREG(mip->INODE.i_mode))
     {
         printf("open> not a regular file\n");
+        iput(mip);
         return -1;
     }
 

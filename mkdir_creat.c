@@ -139,6 +139,7 @@ int my_mkdir(char *pathname)
     if (!S_ISDIR(pmip->INODE.i_mode))
     {
         printf("mkdir> dirname: %s not a directory\n", dname);
+        iput(pmip);
         return -1;
     }
 
@@ -146,6 +147,7 @@ int my_mkdir(char *pathname)
     if (search(pmip, bname))
     {
         printf("mkdir> basename: %s already exists in directory %s\n", bname, dname);
+        iput(pmip);
         return -1;
     }
 
@@ -209,6 +211,7 @@ int my_creat(char *pathname)
     if (!S_ISDIR(pmip->INODE.i_mode))
     {
         printf("creat> dirname: %s not a directory\n", dname);
+        iput(pmip);
         return -1;
     }
 
@@ -216,6 +219,7 @@ int my_creat(char *pathname)
     if (search(pmip, bname))
     {
         printf("creat> basename: %s already exists in directory %s\n", bname, dname);
+        iput(pmip);
         return -1;
     }
 

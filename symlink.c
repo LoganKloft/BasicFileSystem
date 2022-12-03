@@ -63,6 +63,7 @@ int my_readlink(char *pathname, char *buffer)
     if (!S_ISLNK(mip->INODE.i_mode))
     {
         printf("readlink> pathname: %s is not a LNK type\n", pathname);
+        iput(mip);
         return -1;
     }
 

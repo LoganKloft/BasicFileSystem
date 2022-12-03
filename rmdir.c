@@ -62,16 +62,26 @@ int my_rmdir(char *pathname)
 
     MINODE *mip = iget(dev, ino);
 
+    // check permission
+    if (running->uid != mip->INODE.i_uid)
+    {
+        printf("rmdir> UID %d is not the owner of %s\n", running->uid, pathname);
+        iput(mip);
+        return -1;
+    }
+
     // (2) verify MINODE is not busy and INODE is a DIR
     if (!S_ISDIR(mip->INODE.i_mode))
     {
         printf("rmdir> pathname: %s is not a directory\n", pathname);
+        iput(mip);
         return -1;
     }
 
     if (mip->refCount > 1)
     {
         printf("rmdir> pathname: %s is busy with %d references\n", pathname, mip->refCount);
+        iput(mip);
         return -1;
     }
 
@@ -92,6 +102,7 @@ int my_rmdir(char *pathname)
     if (count > 2)
     {
         printf("rmdir> %s has %d entries\n", pathname, count);
+        iput(mip);
         return -1;
     }
 

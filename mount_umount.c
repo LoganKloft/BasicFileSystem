@@ -102,6 +102,7 @@ int my_mount(char *name, char *mount_name)
         // not a dir
         printf("mount> %s is not a directory\n", mount_name);
         close(fd);
+        iput(mip);
         return -1;
     }
 
@@ -112,6 +113,7 @@ int my_mount(char *name, char *mount_name)
             // mount_point busy
             printf("mount> P[%d]'s CWD is mount_point\n", proc[i].pid);
             close(fd);
+            iput(mip);
             return -1;
         }
     }

@@ -15,10 +15,21 @@ int cd(char* pathname)
     ino = 2;
     dev = root->dev;
   }
-  else ino = getino(pathname);
+  else 
+  {
+    ino = getino(pathname);
+  }
+
   if (!ino)
   {
     printf("cd> pathname: %s does not exist\n", pathname);
+    return -1;
+  }
+
+  // check permissions
+  if (!my_access(pathname, 'x'))
+  {
+    printf("cd> UID %d does not have access to %d\n", running->uid, pathname);
     return -1;
   }
 
@@ -30,6 +41,7 @@ int cd(char* pathname)
   if ((mip->INODE.i_mode & 0xF000) != 0x4000)
   {
     printf("cd> pathname: %s not a directory\n", pathname);
+    iput(mip);
     return -1;
   }
 
@@ -146,6 +158,7 @@ int ls(char* pathname)
   if (!mip)
   {
     printf("ls> ino: %d does not exist in memory", ino);
+    iput(mip);
     return -1;
   }
 
@@ -173,6 +186,7 @@ char* rpwd(MINODE *wd)
 
   // (5)
   rpwd(pip);
+  iput(pip); // I think
 
   // (6)
   printf("/%s", my_name);
