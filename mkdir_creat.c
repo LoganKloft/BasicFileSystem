@@ -75,7 +75,7 @@ int kmkdir(MINODE *pmip, char *basename)
     }
 
     int bno = balloc(pmip->dev);
-    if (bno == -1)
+    if (bno == 0)
     {
         printf("kmkdir> failed to allocate block\n");
     }

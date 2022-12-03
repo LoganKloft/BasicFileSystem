@@ -171,14 +171,15 @@ int my_umount(char *filesys)
                 // busy
                 printf("umount> active file found in %s\n", filesys);
                 printf("active file: [%d %d]\n", minode[i].dev, minode[i].ino);
+                printf("refCount: %d\n", minode[i].refCount);
                 return -1;
             }
         }
     }
 
     // (3) unmount
-    mptr->mounted_inode->mounted = 0;
     close(mptr->dev);
+    mptr->mounted_inode->mounted = 0;
     mptr->dev = 0;
     iput(mptr->mounted_inode);
 

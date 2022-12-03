@@ -10,7 +10,11 @@ int cd(char* pathname)
 {
   // (1)
   int ino = 0;
-  if (!pathname || !strlen(pathname)) ino = 2;
+  if (!pathname || !strlen(pathname))
+  {
+    ino = 2;
+    dev = root->dev;
+  }
   else ino = getino(pathname);
   if (!ino)
   {
@@ -20,6 +24,7 @@ int cd(char* pathname)
 
   // (2)
   MINODE *mip = iget(dev, ino);
+  printf("cd: dev %d -> %d ino %d -> %d\n", running->cwd->dev, mip->dev, running->cwd->ino, mip->ino);
 
   // (3)
   if ((mip->INODE.i_mode & 0xF000) != 0x4000)
@@ -81,9 +86,10 @@ int ls_file(MINODE *mip, char *name)
 
   char buff[50];
 
-  sprintf(buff, "[%d %d]", dev, mip->ino);
+  sprintf(buff, "[%d %d]", mip->dev, mip->ino);
 
   printf("%7s", buff);
+  printf(" %d", mip->refCount);
   printf("\n");
 
   return 1;
@@ -94,8 +100,9 @@ int ls_dir(MINODE *mip)
   char buf[BLKSIZE], temp[256];
   DIR *dp;
   char *cp;
+  int dev = mip->dev;
 
-  get_block(dev, mip->INODE.i_block[0], buf);
+  get_block(mip->dev, mip->INODE.i_block[0], buf);
   dp = (DIR *)buf;
   cp = buf;
   
@@ -117,7 +124,12 @@ int ls_dir(MINODE *mip)
 int ls(char* pathname)
 {
   // Use CWD
-  if (!pathname || !strlen(pathname)) return ls_dir(running->cwd);
+  if (!pathname || !strlen(pathname)) 
+  {
+    printf("No argument for ls\n");
+      dev = running->cwd->dev;
+      return ls_dir(running->cwd);
+  }
 
   // Use Path
   int ino = getino(pathname);
@@ -168,8 +180,10 @@ char* rpwd(MINODE *wd)
 
 char* pwd(MINODE *wd)
 {
+  int save_dev = dev;
   if (wd == root) printf("/");
   else rpwd(wd); putchar('\n');
+  dev = save_dev;
 }
 
 #endif

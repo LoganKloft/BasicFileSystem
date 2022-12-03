@@ -78,7 +78,7 @@ int init()
 // load root INODE and set root pointer to it
 int mount_root()
 {  
-  printf("mount_root()\n");
+  printf("mounting root()\n");
   printf("Enter filesystem: ");
   char filesys[64] = {0};
   fgets(filesys, 64, stdin);
@@ -107,6 +107,8 @@ int mount_root()
   printf("EXT2 FS OK\n");
   ninodes = sp->s_inodes_count;
   nblocks = sp->s_blocks_count;
+  int bfree = sp->s_free_blocks_count;
+  int ifree = sp->s_free_inodes_count;
 
   get_block(dev, 2, buf); 
   gp = (GD *)buf;
@@ -115,6 +117,18 @@ int mount_root()
   imap = gp->bg_inode_bitmap;
   iblk = gp->bg_inode_table;
   printf("bmp=%d imap=%d inode_start = %d\n", bmap, imap, iblk);
+  printf("nblocks=%d bfree=%d ninodes=%d ifree=%d\n", nblocks, bfree,ninodes, ifree);
+
+  // update mountTable[0]
+  MOUNT *mptr = &mountTable[0];
+  mptr->dev = dev;
+  mptr->ninodes = ninodes;
+  mptr->nblocks = nblocks;
+  mptr->bmap = bmap;
+  mptr->imap = imap;
+  mptr->iblk = iblk;
+  strcpy(mptr->name, filesys);
+  strcpy(mptr->mount_name, "/");
 
   root = iget(dev, 2);
 
@@ -129,17 +143,6 @@ int mount_root()
   proc[1].cwd = iget(dev, 2);
 
   printf("root refCount = %d\n", root->refCount);
-
-  // update mountTable[0]
-  MOUNT *mptr = &mountTable[0];
-  mptr->dev = dev;
-  mptr->ninodes = ninodes;
-  mptr->nblocks = nblocks;
-  mptr->bmap = bmap;
-  mptr->imap = imap;
-  mptr->iblk = iblk;
-  strcpy(mptr->name, filesys);
-  strcpy(mptr->mount_name, "/");
 }
 
 int main(int argc, char *argv[ ])
@@ -148,7 +151,7 @@ int main(int argc, char *argv[ ])
   mount_root();
   
   while(1){
-    printf("[ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit]\n[open|close|lseek|read|cat|write|cp|mount|umount]\ninput command: ");
+    printf("[ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit]\n[open|close|lseek|read|cat|write|cp|mount|umount]\ninput command [%d %d]: ", running->cwd->dev, running->cwd->ino);
     fgets(line, 128, stdin);
     line[strlen(line)-1] = 0;
 
@@ -237,6 +240,8 @@ int quit()
   MINODE *mip;
   for (i=0; i<NMINODE; i++){
     mip = &minode[i];
+    // if closed dev skip
+    if (getmptr(mip->dev) == 0) continue;
     if (mip->refCount && mip->dirty)
       mip->refCount = 1;
       iput(mip);

@@ -91,6 +91,8 @@ int incFreeBlocks(int dev)
 
 int ialloc(int dev)
 {
+    int imap = getmptr(dev)->imap;
+    int ninodes = getmptr(dev)->ninodes;
     int i;
     char buf[BLKSIZE];
 
@@ -116,6 +118,8 @@ int ialloc(int dev)
 
 int balloc(int dev)
 {
+    int bmap = getmptr(dev)->bmap;
+    int nblocks = getmptr(dev)->nblocks;
     int i;
     char buf[BLKSIZE];
 
@@ -142,6 +146,8 @@ int balloc(int dev)
 
 int idalloc(int dev, int ino)
 {
+    int imap = getmptr(dev)->imap;
+    int ninodes = getmptr(dev)->ninodes;
     int i;
     char buf[BLKSIZE];
 
@@ -163,8 +169,8 @@ int idalloc(int dev, int ino)
 
 int bdalloc(int dev, int bno)
 {
-    // bno - 1 changed
-    bno = bno - 1;
+    int bmap = getmptr(dev)->bmap;
+    int nblocks = getmptr(dev)->nblocks;
     int i;
     char buf[BLKSIZE];
 
@@ -175,7 +181,7 @@ int bdalloc(int dev, int bno)
 
     // get bno bitmap block
     get_block(dev, bmap, buf);
-    clr_bit(buf, bno);
+    clr_bit(buf, bno - 1);
 
     // write buf back
     put_block(dev, bmap, buf);

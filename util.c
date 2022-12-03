@@ -4,6 +4,18 @@
 
 #include "type.h"
 
+MOUNT* getmptr(int dev)
+{
+   for (int i = 0; i < NMTABLE; i++)
+   {
+      if (mountTable[i].dev == dev)
+      {
+         return &mountTable[i];
+      }
+   }
+   return 0;
+}
+
 int get_block(int dev, int blk, char *buf)
 {
    lseek(dev, (long)blk*BLKSIZE, 0);
@@ -46,6 +58,7 @@ MINODE *iget(int dev, int ino)
   char buf[BLKSIZE];
   int blk, offset;
   INODE *ip;
+  int iblk = getmptr(dev)->iblk;
 
   for (i=0; i<NMINODE; i++){
     mip = &minode[i];
@@ -74,6 +87,8 @@ MINODE *iget(int dev, int ino)
        ip = (INODE *)buf + offset;  // this INODE in buf[ ] 
        // copy INODE to mp->INODE
        mip->INODE = *ip;
+       mip->dirty = 0;
+       mip->mounted = 0;
        return mip;
     }
   }   
@@ -83,7 +98,9 @@ MINODE *iget(int dev, int ino)
 
 void iput(MINODE *mip)  // iput(): release a minode
 {
+   if (getmptr(mip->dev) == 0) return; // dev not open
  int i, block, offset;
+ int iblk = getmptr(mip->dev)->iblk;
  char buf[BLKSIZE];
  INODE *ip;
 
@@ -108,7 +125,7 @@ void iput(MINODE *mip)  // iput(): release a minode
    int ino = mip->ino;
    block    = (ino-1)/8 + iblk;
    offset = (ino-1) % 8;
-
+   printf("[%d %d] block %d offset %d\n", mip->dev, mip->ino, block, offset);
    //printf("iput: ino=%d block=%d offset=%d\n", ino, block, offset);
 
    get_block(mip->dev, block, buf);    // buf[ ] contains this INODE
@@ -166,13 +183,22 @@ int getino(char *pathname) // return ino of pathname
 
   printf("getino: pathname=%s\n", pathname);
   if (strcmp(pathname, "/")==0)
+  {
+      dev = root->dev;
       return 2;
+  }
   
   // starting mip = root OR CWD
   if (pathname[0]=='/')
-     mip = root;
+  {
+      mip = root;
+      dev = mip->dev;
+  }
   else
-     mip = running->cwd;
+  {
+      mip = running->cwd;
+      dev = mip->dev;
+  }
 
   mip->refCount++;         // because we iput(mip) later
   
@@ -181,6 +207,33 @@ int getino(char *pathname) // return ino of pathname
   for (i=0; i<n; i++){
       printf("===========================================\n");
       printf("getino: i=%d name[%d]=%s\n", i, i, name[i]);
+
+      if (!S_ISDIR(mip->INODE.i_mode))
+      {
+         printf("getino: %s is not a dir\n", name[i]);
+         iput(mip);
+         return 0;
+      }
+
+      if (strcmp(name[i], "..") == 0)
+      {
+         // check for upward traversal
+         if (mip->dev > 3 && mip->ino == 2)
+         {
+            printf("Upward traversal\n");
+            MOUNT *mptr = getmptr(mip->dev);
+            iput(mip);
+            printf("cross mounting point: dev=%d newdev=%d\n", dev, mptr->mounted_inode->dev);
+            mip = mptr->mounted_inode;
+            dev = mip->dev;
+            ino = mip->ino;
+
+            ino = search(mip, name[i]);
+            mip=iget(dev, ino);
+            printf("After upward [%d %d]\n", dev, ino);
+            continue;
+         }
+      }
  
       ino = search(mip, name[i]);
 
@@ -191,23 +244,34 @@ int getino(char *pathname) // return ino of pathname
       }
 
       iput(mip);
+      printf("getting mip of ino %d from dev %d\n", ino, dev);
       mip = iget(dev, ino);
+      printf("[%d %d] mounted? %d\n", mip->dev, mip->ino, mip->mounted);
+
+      if (mip->mounted == 1)
+      {
+         // check for downward traversal
+         if (!strcmp(name[i], ".") == 0 && !strcmp(name[i], "..") == 0)
+         {
+            printf("Downward traversal\n");
+            // go to mount table of mip
+            MOUNT *mptr = mip->mptr;
+            printf("[%d %d] is mounted on; cross mounting point newdev=%d\n", mip->dev, mip->ino, mptr->dev);
+
+            // change global dev
+            dev = mptr->dev;
+
+            // iput current mip and set to root of mounted filesystem
+            iput(mip);
+            mip = iget(dev, 2);
+            ino = mip->ino;
+            printf("After downward: dev: %d, ino: %d\n", dev, ino);
+         }
+      }
    }
 
    iput(mip);
    return ino;
-}
-
-MOUNT* getmptr(int dev)
-{
-   for (int i = 0; i < NMTABLE; i++)
-   {
-      if (mountTable[i].dev == dev)
-      {
-         return &mountTable[i];
-      }
-   }
-   return 0;
 }
 
 // These 2 functions are needed for pwd()
@@ -225,7 +289,7 @@ int findmyname(MINODE *parent, u32 myino, char myname[ ])
 
    /*** search for ino in mip's data blocks: ASSUME i_block[0] ONLY ***/
 
-   get_block(dev, ip->i_block[0], sbuf);
+   get_block(parent->dev, ip->i_block[0], sbuf);
    dp = (DIR *)sbuf;
    cp = sbuf;
 
@@ -249,6 +313,15 @@ int findmyname(MINODE *parent, u32 myino, char myname[ ])
 
 int findino(MINODE *mip, u32 *myino) // myino = i# of . return i# of ..
 {
+   // special case: mip is root (ino == 2) && dev > 3
+   // then mip is of the mountTable
+   if (mip->ino == 2 && mip->dev > 3)
+   {
+      MOUNT *mptr = getmptr(mip->dev);
+      mip = mptr->mounted_inode;
+      dev = mip->dev;
+   }
+
   // mip points at a DIR minode
   // WRITE your code here: myino = ino of .  return ino of ..
   // all in i_block[0] of this DIR INODE.
@@ -260,7 +333,7 @@ int findino(MINODE *mip, u32 *myino) // myino = i# of . return i# of ..
 
    /*** search for ino in mip's data blocks: ASSUME i_block[0] ONLY ***/
 
-   get_block(dev, ip->i_block[0], sbuf);
+   get_block(mip->dev, ip->i_block[0], sbuf);
    dp = (DIR *)sbuf;
    cp = sbuf;
 
