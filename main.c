@@ -162,7 +162,7 @@ void menu()
     printf("fork   ps      kill\n");
     printf("================== Usage =================\n");
     printf("mkdir filename\n");
-    printf("link  oldfile  newfile");
+    printf("link  oldfile  newfile\n");
     printf("mount filesys  dir\n");
     printf("open  filename mode (0|1|2|3 for R|W|RW|AP)\n");
     printf("write fd       text_string\n");

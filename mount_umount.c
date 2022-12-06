@@ -94,12 +94,11 @@ int my_mount(char *name, char *mount_name)
         iput(mip);
         return -1;
     }
-
     for (int i = 0; i < NPROC; i++)
     {
-        if (proc[i].cwd->dev == fd && proc[i].cwd->ino == ino)
+        if (proc[i].cwd != 0 && proc[i].cwd->dev == fd && proc[i].cwd->ino == ino)
         {
-            // mount_point busy
+            //mount_point busy
             printf("mount> P[%d]'s CWD is mount_point\n", proc[i].pid);
             close(fd);
             iput(mip);
