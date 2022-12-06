@@ -20,9 +20,9 @@
 #include "rmdir.c"
 #include "link_unlink.c"
 #include "symlink.c"
-#include "stat.c"
-#include "misc1.c"
-#include "open_close_lseek.c"
+// #include "stat.c"
+// #include "misc1.c"
+#include "open_close.c"
 #include "read_cat.c"
 #include "write_cp.c"
 #include "mount_umount.c"
@@ -152,13 +152,36 @@ int mount_root()
   printf("root refCount = %d\n", root->refCount);
 }
 
+void menu()
+{
+    printf("****************** Menu ******************\n");
+    printf("ls     cd      mkdir      creat     rmdir\n");
+    printf("link   unlink  symlink    quit      open\n");
+    printf("close  lseek   read       cat       write\n");
+    printf("cp     mount   umount     pfd       cs\n");
+    printf("fork   ps      kill\n");
+    printf("================== Usage =================\n");
+    printf("mkdir filename\n");
+    printf("link  oldfile  newfile");
+    printf("mount filesys  dir\n");
+    printf("open  filename mode (0|1|2|3 for R|W|RW|AP)\n");
+    printf("write fd       text_string\n");
+    printf("read  fd       nbytes\n");
+    printf("pfd   (display opened file descriptors)\n");
+    printf("cs    (switch process)\n");
+    printf("fork  (fork child process)\n");
+    printf("ps    (show process queue)\n");
+    printf("kill  pid (kill a process)\n");
+    printf("*****************************************\n");
+}
+
 int main(int argc, char *argv[ ])
 {
   init();  
   mount_root();
   
   while(1){
-    printf("[ls|cd|pwd|mkdir|creat|rmdir|link|unlink|symlink|stat|chmod|utime|quit]\n[open|close|lseek|read|cat|write|cp|mount|umount]\ninput command [%d %d]: ", running->cwd->dev, running->cwd->ino);
+    printf("input> ");
     fgets(line, 128, stdin);
     line[strlen(line)-1] = 0;
 
@@ -188,14 +211,14 @@ int main(int argc, char *argv[ ])
       sscanf(line, "%s %s %s", cmd, pathname, pathname2);
       my_symlink(pathname, pathname2);
     }
-    else if (strcmp(cmd, "stat") == 0) my_stat(pathname);
-    else if (strcmp(cmd, "chmod") == 0)
-    {
-      char permissions[32];
-      sscanf(line, "%s %s %s", cmd, permissions, pathname);
-      my_chmod(permissions, pathname);
-    }
-    else if (strcmp(cmd, "utime") == 0) my_utime(pathname);
+    // else if (strcmp(cmd, "stat") == 0) my_stat(pathname);
+    // else if (strcmp(cmd, "chmod") == 0)
+    // {
+    //   char permissions[32];
+    //   sscanf(line, "%s %s %s", cmd, permissions, pathname);
+    //   my_chmod(permissions, pathname);
+    // }
+    // else if (strcmp(cmd, "utime") == 0) my_utime(pathname);
     else if (strcmp(cmd, "quit") == 0) quit();
     else if (strcmp(cmd, "open") == 0)
     {
@@ -219,7 +242,9 @@ int main(int argc, char *argv[ ])
     }
     else if (strcmp(cmd, "read") == 0)
     {
-      printf("read %d", read_file());
+      char amount[BLKSIZE];
+      sscanf(line, "%s %s %s", cmd, pathname, amount);
+      printf("read %d", read_file(pathname, amount));
     }
     else if (strcmp(cmd, "cat") == 0)
     {
@@ -242,6 +267,7 @@ int main(int argc, char *argv[ ])
     else if (strcmp(cmd, "fork") == 0) my_fork();
     else if (strcmp(cmd, "ps") == 0) my_ps();
     else if (strcmp(cmd, "kill") == 0) my_kill(pathname);
+    else if (strcmp(cmd, "menu") == 0) menu();
   }
 }
 

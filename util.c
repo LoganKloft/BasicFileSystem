@@ -125,7 +125,6 @@ void iput(MINODE *mip)  // iput(): release a minode
    int ino = mip->ino;
    block    = (ino-1)/8 + iblk;
    offset = (ino-1) % 8;
-   printf("[%d %d] block %d offset %d\n", mip->dev, mip->ino, block, offset);
    //printf("iput: ino=%d block=%d offset=%d\n", ino, block, offset);
 
    get_block(mip->dev, block, buf);    // buf[ ] contains this INODE
@@ -225,7 +224,6 @@ int getino(char *pathname) // return ino of pathname
          // check for upward traversal
          if (mip->dev > 3 && mip->ino == 2)
          {
-            printf("Upward traversal\n");
             MOUNT *mptr = getmptr(mip->dev);
             iput(mip);
             printf("cross mounting point: dev=%d newdev=%d\n", dev, mptr->mounted_inode->dev);
@@ -235,7 +233,6 @@ int getino(char *pathname) // return ino of pathname
 
             ino = search(mip, name[i]);
             mip=iget(dev, ino);
-            printf("After upward [%d %d]\n", dev, ino);
             continue;
          }
       }
@@ -249,16 +246,13 @@ int getino(char *pathname) // return ino of pathname
       }
 
       iput(mip);
-      printf("getting mip of ino %d from dev %d\n", ino, dev);
       mip = iget(dev, ino);
-      printf("[%d %d] mounted? %d\n", mip->dev, mip->ino, mip->mounted);
 
       if (mip->mounted == 1)
       {
          // check for downward traversal
          if (!strcmp(name[i], ".") == 0 && !strcmp(name[i], "..") == 0)
          {
-            printf("Downward traversal\n");
             // go to mount table of mip
             MOUNT *mptr = mip->mptr;
             printf("[%d %d] is mounted on; cross mounting point newdev=%d\n", mip->dev, mip->ino, mptr->dev);
@@ -270,7 +264,6 @@ int getino(char *pathname) // return ino of pathname
             iput(mip);
             mip = iget(dev, 2);
             ino = mip->ino;
-            printf("After downward: dev: %d, ino: %d\n", dev, ino);
          }
       }
    }

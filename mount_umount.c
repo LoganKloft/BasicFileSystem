@@ -5,17 +5,6 @@
 
 int my_mount(char *name, char *mount_name)
 {
-    // // (1) ask for file system and mount point
-    // char name[64] = {0};
-    // printf("Enter disk: ");
-    // fgets(name, 64, stdin);
-    // name[strlen(name) - 1] = 0; // remove trailing new line
-
-    // char mount_name[64] = {0};
-    // printf("Enter mount point: ");
-    // fgets(mount_name, 64, stdin);
-    // mount_name[strlen(mount_name) - 1] = 0; // remove trailing new line
-
     if (strlen(name) == 0 && strlen(mount_name) == 0)
     {
         printf("dev ninodes nblocks bmap imap iblk name mname\n");

@@ -1,23 +1,15 @@
 #ifndef READCAT
 #define READCAT
 
-#include "open_close_lseek.c"
+#include "open_close.c"
 
-int read_file()
+int read_file(char *fd_str, char *nbytes_str)
 {
     // ask for fd
-    char fd_s[32];
-    printf("Enter an fd for read: ");
-    fgets(fd_s, 32, stdin);
-    fd_s[strlen(fd_s) - 1] = 0; // remove trailing new line
-    int fd = atoi(fd_s);
+    int fd = atoi(fd_str);
 
     // ask for nbytes
-    char bytes_s[32];
-    printf("Enter number of bytes to read: ");
-    fgets(bytes_s, 32, stdin);
-    bytes_s[strlen(bytes_s) - 1] = 0; // remove trailing new line
-    int nbytes = atoi(bytes_s);
+    int nbytes = atoi(nbytes_str);
 
     // verify fd is opened for RD or RW
     if (fd < 0 || fd >= NFD)
@@ -47,7 +39,7 @@ int read_file()
     // make read call
     int result = my_read(fd, buf, nbytes);
     buf[nbytes] = 0;
-    printf("result: %s\n", buf);
+    printf("%s\n", buf);
     return result;
 }
 

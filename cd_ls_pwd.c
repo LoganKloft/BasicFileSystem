@@ -29,13 +29,13 @@ int cd(char* pathname)
   // check permissions
   if (!my_access(pathname, 'x'))
   {
-    printf("cd> UID %d does not have access to %d\n", running->uid, pathname);
+    printf("cd> UID %d does not have access to %s\n", running->uid, pathname);
     return -1;
   }
 
   // (2)
   MINODE *mip = iget(dev, ino);
-  printf("cd: dev %d -> %d ino %d -> %d\n", running->cwd->dev, mip->dev, running->cwd->ino, mip->ino);
+  // printf("cd: dev %d -> %d ino %d -> %d\n", running->cwd->dev, mip->dev, running->cwd->ino, mip->ino);
 
   // (3)
   if ((mip->INODE.i_mode & 0xF000) != 0x4000)

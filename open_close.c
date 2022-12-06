@@ -1,5 +1,5 @@
-#ifndef OPENCLOSELSEEK
-#define OPENCLOSELSEEK
+#ifndef OPENCLOSE
+#define OPENCLOSE
 
 #include "type.h"
 #include "util.c"

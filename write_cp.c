@@ -3,7 +3,7 @@
 
 #include "mkdir_creat.c"
 #include "read_cat.c"
-#include "open_close_lseek.c"
+#include "open_close.c"
 
 int my_write_str(char *fd_string, char *content)
 {
@@ -35,7 +35,6 @@ int my_write_str(char *fd_string, char *content)
     strcpy(buf, content);
 
     int nbytes = strlen(buf);
-    printf("content: %s nbytes: %d fd: %d\n", buf, nbytes, fd);
 
     return my_write(fd, buf, nbytes);
 }
